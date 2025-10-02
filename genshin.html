@@ -88,6 +88,24 @@
             width: 100%;
         }
 
+        /* Auth Styles */
+        .auth-card {
+            background: rgba(26, 35, 126, 0.1);
+            border: 1px solid rgba(179, 137, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #ffd600;
+            box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.2);
+        }
+
         /* Mobile Menu Styles */
         .mobile-menu {
             transform: translateX(100%);
@@ -130,7 +148,39 @@
             </div>
 
             <div class="flex items-center space-x-4">
-                <button class="btn-primary px-6 py-2 rounded-full font-semibold">Order Sekarang</button>
+                <!-- User Menu (tampil jika login) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-black font-bold text-sm" id="user-avatar">
+                            U
+                        </div>
+                        <span class="text-white" id="user-name">User</span>
+                    </div>
+                    <div class="relative group">
+                        <button class="text-white hover:text-accent transition">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="absolute right-0 top-10 w-48 bg-gray-900 rounded-lg shadow-lg py-2 hidden group-hover:block">
+                            <button onclick="showProfile()" class="w-full text-left px-4 py-2 text-white hover:bg-gray-800">
+                                <i class="fas fa-user mr-2"></i> Profil Saya
+                            </button>
+                            <button onclick="showOrders()" class="w-full text-left px-4 py-2 text-white hover:bg-gray-800">
+                                <i class="fas fa-history mr-2"></i> Riwayat Order
+                            </button>
+                            <hr class="my-2 border-gray-700">
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-800">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Buttons (tampil jika belum login) -->
+                <div id="auth-buttons" class="flex items-center space-x-3">
+                    <button onclick="showAuthModal()" class="text-white hover:text-accent transition">Login</button>
+                    <button onclick="showAuthModal()" class="btn-primary px-4 py-2 rounded-full text-sm">Daftar</button>
+                </div>
+
                 <button id="menu-toggle" class="text-white md:hidden">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
@@ -158,7 +208,25 @@
             <a href="index.html#harga" class="text-white text-lg font-medium hover:text-accent transition">Harga</a>
             <a href="index.html#testimoni" class="text-white text-lg font-medium hover:text-accent transition">Testimoni</a>
             <a href="index.html#kontak" class="text-white text-lg font-medium hover:text-accent transition">Kontak</a>
-            <button class="btn-primary w-full py-3 rounded-full font-bold mt-4">Order Sekarang</button>
+            
+            <!-- Mobile Auth Buttons -->
+            <div id="mobile-auth-buttons" class="flex flex-col space-y-3">
+                <button onclick="showAuthModal()" class="text-white text-lg font-medium hover:text-accent transition text-left">Login</button>
+                <button onclick="showAuthModal()" class="btn-primary w-full py-3 rounded-full font-bold">Daftar</button>
+            </div>
+
+            <!-- Mobile User Menu -->
+            <div id="mobile-user-menu" class="hidden">
+                <button onclick="showProfile()" class="text-white text-lg font-medium hover:text-accent transition text-left w-full text-left">
+                    <i class="fas fa-user mr-2"></i> Profil Saya
+                </button>
+                <button onclick="showOrders()" class="text-white text-lg font-medium hover:text-accent transition text-left w-full text-left mt-3">
+                    <i class="fas fa-history mr-2"></i> Riwayat Order
+                </button>
+                <button onclick="logout()" class="text-red-400 text-lg font-medium hover:text-red-300 transition text-left w-full text-left mt-3">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
+            </div>
         </div>
         
         <div class="absolute bottom-6 left-6 right-6">
@@ -178,6 +246,251 @@
     
     <!-- Menu Overlay -->
     <div id="menu-overlay" class="menu-overlay fixed inset-0 bg-black bg-opacity-70 z-30 md:hidden"></div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="auth-card rounded-2xl p-8 max-w-md w-full">
+            <!-- Tab Navigation -->
+            <div class="flex mb-8 border-b border-gray-700">
+                <button id="login-tab" class="flex-1 py-3 text-center font-semibold text-accent border-b-2 border-accent">
+                    Login
+                </button>
+                <button id="register-tab" class="flex-1 py-3 text-center font-semibold text-gray-400 border-b-2 border-transparent">
+                    Daftar
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Masuk ke Akun Anda</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="text-white block mb-2">Email</label>
+                        <input type="email" id="login-email" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Password</label>
+                        <input type="password" id="login-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                    </button>
+                </form>
+                <div id="login-message" class="mt-4 text-center hidden"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="hidden">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Buat Akun Baru</h2>
+                <form id="registerForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-white block mb-2">Nama Depan</label>
+                            <input type="text" id="first-name" required 
+                                   class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="John">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">Nama Belakang</label>
+                            <input type="text" id="last-name" required 
+                                   class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Username</label>
+                        <input type="text" id="reg-username" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="johndoe">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Email</label>
+                        <input type="email" id="reg-email" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Password</label>
+                        <input type="password" id="reg-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Konfirmasi Password</label>
+                        <input type="password" id="reg-confirm-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">
+                        <i class="fas fa-user-plus mr-2"></i> Daftar
+                    </button>
+                </form>
+                <div id="register-message" class="mt-4 text-center hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Pesan Paket Joki</h3>
+                <button onclick="closeOrderModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="order-form" class="space-y-4">
+                <!-- Package Info -->
+                <div id="order-package-info" class="bg-gray-800 p-4 rounded-lg border-l-4 border-accent">
+                    <h4 class="text-accent font-bold text-lg" id="selected-package-name">-</h4>
+                    <p class="text-white font-semibold" id="selected-package-price">-</p>
+                    <p class="text-gray-400 text-sm mt-1" id="selected-package-game">-</p>
+                </div>
+                
+                <!-- User ID -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-user mr-2"></i>User ID/Username Game
+                    </label>
+                    <input type="text" id="order-userid" required 
+                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                           placeholder="Contoh: 123456789 atau PlayerName">
+                </div>
+                
+                <!-- Server/Region -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-globe mr-2"></i>Server/Region
+                    </label>
+                    <input type="text" id="order-server" required 
+                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                           placeholder="Contoh: Asia, Europe, Indonesia, dll">
+                </div>
+                
+                <!-- Password Game -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-lock mr-2"></i>Password Akun Game
+                    </label>
+                    <input type="password" id="order-password" required 
+                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                           placeholder="Masukkan password game Anda">
+                    <p class="text-gray-400 text-xs mt-2">
+                        <i class="fas fa-shield-alt mr-1"></i>Password akan dihapus dari sistem kami setelah order selesai
+                    </p>
+                </div>
+                
+                <!-- Additional Notes -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-sticky-note mr-2"></i>Catatan Khusus
+                    </label>
+                    <textarea id="order-notes" 
+                              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                              rows="3" 
+                              placeholder="Request khusus, karakter yang ingin ditingkatkan, target rank, dll..."></textarea>
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start space-x-3 p-3 bg-gray-800 rounded-lg">
+                    <input type="checkbox" id="order-terms" required class="mt-1 text-accent">
+                    <label for="order-terms" class="text-gray-300 text-sm">
+                        Saya setuju dengan <a href="#" class="text-accent hover:underline">syarat dan ketentuan</a> serta memahami bahwa password saya akan dihapus setelah order selesai
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn-primary w-full py-4 rounded-full font-bold text-lg">
+                    <i class="fas fa-paper-plane mr-2"></i> Konfirmasi Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Profil Saya</h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Sidebar Menu -->
+                <div class="profile-card rounded-2xl p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-accent flex items-center justify-center text-black font-bold text-2xl" id="profile-avatar">
+                            U
+                        </div>
+                        <h2 id="profile-name" class="text-xl font-bold text-white">User Name</h2>
+                        <p id="profile-email" class="text-gray-400 text-sm">user@email.com</p>
+                    </div>
+
+                    <nav class="space-y-2">
+                        <button onclick="showProfileSection('info')" class="w-full text-left px-4 py-3 bg-accent text-black rounded-lg font-semibold">
+                            <i class="fas fa-user mr-2"></i> Profil
+                        </button>
+                        <button onclick="showProfileSection('orders')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                            <i class="fas fa-history mr-2"></i> Riwayat Order
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Profile Info -->
+                    <div id="profile-info-section">
+                        <h3 class="text-2xl font-bold text-white mb-6">Informasi Profil</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="text-gray-400 block mb-2">Nama Lengkap</label>
+                                <p id="profile-fullname" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Username</label>
+                                <p id="profile-username" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Email</label>
+                                <p id="profile-email-display" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Member Since</label>
+                                <p id="profile-joined" class="text-white font-semibold">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-accent mb-2" id="total-orders">0</div>
+                                <div class="text-gray-400 text-sm">Total Order</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-green-400 mb-2" id="completed-orders">0</div>
+                                <div class="text-gray-400 text-sm">Selesai</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-400 mb-2" id="processing-orders">0</div>
+                                <div class="text-gray-400 text-sm">Diproses</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-accent mb-2" id="total-spent">Rp 0</div>
+                                <div class="text-gray-400 text-sm">Total Belanja</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Section -->
+                    <div id="profile-orders-section" class="hidden">
+                        <h3 class="text-2xl font-bold text-white mb-6">Riwayat Order</h3>
+                        <div id="orders-list" class="space-y-4">
+                            <p class="text-gray-400 text-center">Belum ada order</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero-bg min-h-screen flex items-center pt-20 pb-16 relative overflow-hidden">
@@ -233,7 +546,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Daily Commission (30 hari)', 'Rp 150.000', 'Genshin Impact')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 2 -->
@@ -264,7 +580,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Spiral Abyss 9-12', 'Rp 100.000', 'Genshin Impact')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 3 -->
@@ -294,7 +613,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Farm Material (per jam)', 'Rp 25.000', 'Genshin Impact')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
             </div>
 
@@ -327,7 +649,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Quest Archon/Story', 'Rp 75.000', 'Genshin Impact')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 5 -->
@@ -357,7 +682,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Event Completion', 'Rp 50.000', 'Genshin Impact')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
             </div>
         </div>
@@ -405,7 +733,7 @@
             <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Siap Tingkatkan <span class="text-accent">Genshin Impact</span> Anda?</h2>
             <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-10">Jangan buang waktu lagi! Pilih paket yang sesuai dan biarkan kami yang menangani semuanya.</p>
             <div class="flex flex-col md:flex-row justify-center gap-6">
-                <button class="btn-primary px-8 py-4 rounded-full text-lg font-bold">
+                <button onclick="showAuthModal()" class="btn-primary px-8 py-4 rounded-full text-lg font-bold">
                     Order Sekarang <i class="ml-2 fas fa-arrow-right"></i>
                 </button>
                 <a href="index.html" class="border-2 border-accent text-accent px-8 py-4 rounded-full text-lg font-bold hover:bg-accent hover:text-black transition">
@@ -485,27 +813,432 @@
         </div>
     </footer>
 
+    <!-- JavaScript -->
     <script>
-        // Mobile Menu Toggle
+        // Auth System
+        class AuthSystem {
+            constructor() {
+                this.currentUser = null;
+                this.users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+                this.init();
+            }
+
+            init() {
+                const savedUser = localStorage.getItem('diurnal_current_user');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    this.updateUI();
+                }
+            }
+
+            register(userData) {
+                if (this.users.find(user => user.email === userData.email)) {
+                    return { success: false, message: 'Email sudah terdaftar!' };
+                }
+
+                if (this.users.find(user => user.username === userData.username)) {
+                    return { success: false, message: 'Username sudah dipakai!' };
+                }
+
+                const newUser = {
+                    id: Date.now().toString(),
+                    ...userData,
+                    createdAt: new Date().toISOString(),
+                    orders: [],
+                    balance: 0
+                };
+
+                this.users.push(newUser);
+                localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+
+                return { success: true, message: 'Registrasi berhasil!' };
+            }
+
+            login(email, password) {
+                const user = this.users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    this.currentUser = user;
+                    localStorage.setItem('diurnal_current_user', JSON.stringify(user));
+                    this.updateUI();
+                    return { success: true, message: 'Login berhasil!' };
+                }
+                return { success: false, message: 'Email atau password salah!' };
+            }
+
+            logout() {
+                this.currentUser = null;
+                localStorage.removeItem('diurnal_current_user');
+                this.updateUI();
+                return { success: true, message: 'Logout berhasil!' };
+            }
+
+            updateUI() {
+                const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+                const userName = document.getElementById('user-name');
+                const userAvatar = document.getElementById('user-avatar');
+                const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+
+                if (this.currentUser) {
+                    if (authButtons) authButtons.classList.add('hidden');
+                    if (userMenu) userMenu.classList.remove('hidden');
+                    if (userName) userName.textContent = this.currentUser.username;
+                    if (userAvatar) userAvatar.textContent = this.currentUser.username.charAt(0).toUpperCase();
+                    if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
+                    if (mobileUserMenu) mobileUserMenu.classList.remove('hidden');
+                } else {
+                    if (authButtons) authButtons.classList.remove('hidden');
+                    if (userMenu) userMenu.classList.add('hidden');
+                    if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
+                    if (mobileUserMenu) mobileUserMenu.classList.add('hidden');
+                }
+            }
+
+            getCurrentUser() {
+                return this.currentUser;
+            }
+
+            addOrder(orderData) {
+                if (!this.currentUser) return false;
+
+                const order = {
+                    id: Date.now().toString(),
+                    ...orderData,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                this.currentUser.orders.unshift(order);
+                
+                const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
+                if (userIndex !== -1) {
+                    this.users[userIndex] = this.currentUser;
+                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                    localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
+                }
+
+                return true;
+            }
+
+            getUserOrders() {
+                return this.currentUser ? this.currentUser.orders : [];
+            }
+        }
+
+        const auth = new AuthSystem();
+
+        // Modal Functions
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function showProfile() {
+            loadProfileData();
+            document.getElementById('profile-modal').classList.remove('hidden');
+            closeMobileMenu();
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function showOrders() {
+            showProfileSection('orders');
+        }
+
+        function showProfileSection(section) {
+            document.getElementById('profile-info-section').classList.add('hidden');
+            document.getElementById('profile-orders-section').classList.add('hidden');
+            
+            if (section === 'info') {
+                document.getElementById('profile-info-section').classList.remove('hidden');
+            } else if (section === 'orders') {
+                document.getElementById('profile-orders-section').classList.remove('hidden');
+                loadOrdersList();
+            }
+        }
+
+        // Order Functions
+        function orderPackage(packageName, price, game) {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                return;
+            }
+            
+            // Show order modal
+            document.getElementById('selected-package-name').textContent = packageName;
+            document.getElementById('selected-package-price').textContent = price;
+            document.getElementById('selected-package-game').textContent = game;
+            document.getElementById('order-modal').classList.remove('hidden');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+        }
+
+        // Load profile data
+        function loadProfileData() {
+            const user = auth.getCurrentUser();
+            if (!user) return;
+
+            document.getElementById('profile-avatar').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('profile-name').textContent = user.username;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('profile-fullname').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('profile-username').textContent = user.username;
+            document.getElementById('profile-email-display').textContent = user.email;
+            document.getElementById('profile-joined').textContent = new Date(user.createdAt).toLocaleDateString('id-ID');
+
+            const orders = auth.getUserOrders();
+            document.getElementById('total-orders').textContent = orders.length;
+            document.getElementById('completed-orders').textContent = orders.filter(o => o.status === 'completed').length;
+            document.getElementById('processing-orders').textContent = orders.filter(o => o.status === 'processing').length;
+            
+            const totalSpent = orders.reduce((sum, order) => {
+                return sum + parseInt(order.price.replace(/\D/g, '') || 0);
+            }, 0);
+            document.getElementById('total-spent').textContent = `Rp ${totalSpent.toLocaleString()}`;
+        }
+
+        // Load orders list
+        function loadOrdersList() {
+            const orders = auth.getUserOrders();
+            const ordersList = document.getElementById('orders-list');
+
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p class="text-gray-400 text-center">Belum ada order</p>';
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="profile-card rounded-2xl p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="text-white font-semibold">${order.packageName || 'Paket Joki'}</h4>
+                            <p class="text-gray-400 text-sm">${order.game || 'Game'} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
+                        </div>
+                        <span class="order-status-${order.status} font-semibold">${getStatusText(order.status)}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
+                        <span class="text-gray-400 text-sm">ID: ${order.id.slice(-6)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Menunggu',
+                'processing': 'Diproses',
+                'completed': 'Selesai',
+                'cancelled': 'Dibatalkan'
+            };
+            return statusMap[status] || status;
+        }
+
+        function logout() {
+            auth.logout();
+            closeProfileModal();
+            closeMobileMenu();
+        }
+
+        // Mobile Menu Functions
         const menuToggle = document.getElementById('menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const menuClose = document.getElementById('menu-close');
         const menuOverlay = document.getElementById('menu-overlay');
-        
-        function toggleMenu() {
+
+        function toggleMobileMenu() {
             mobileMenu.classList.toggle('active');
             menuOverlay.classList.toggle('active');
             document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
         }
-        
-        menuToggle.addEventListener('click', toggleMenu);
-        menuClose.addEventListener('click', toggleMenu);
-        menuOverlay.addEventListener('click', toggleMenu);
-        
-        // Close menu when clicking on menu links
-        const menuLinks = document.querySelectorAll('#mobile-menu a');
-        menuLinks.forEach(link => {
-            link.addEventListener('click', toggleMenu);
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuToggle.addEventListener('click', toggleMobileMenu);
+        menuClose.addEventListener('click', closeMobileMenu);
+        menuOverlay.addEventListener('click', closeMobileMenu);
+
+        // Auth Form Handlers
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const messageDiv = document.getElementById('login-message');
+
+            const result = auth.login(email, password);
+            
+            messageDiv.textContent = result.message;
+            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+            messageDiv.classList.remove('hidden');
+
+            if (result.success) {
+                setTimeout(() => {
+                    closeAuthModal();
+                }, 1000);
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                firstName: document.getElementById('first-name').value,
+                lastName: document.getElementById('last-name').value,
+                username: document.getElementById('reg-username').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value
+            };
+
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            const messageDiv = document.getElementById('register-message');
+
+            if (userData.password !== confirmPassword) {
+                messageDiv.textContent = 'Password tidak cocok!';
+                messageDiv.className = 'mt-4 text-center text-red-400';
+                messageDiv.classList.remove('hidden');
+                return;
+            }
+
+            const result = auth.register(userData);
+            
+            messageDiv.textContent = result.message;
+            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+            messageDiv.classList.remove('hidden');
+
+            if (result.success) {
+                setTimeout(() => {
+                    document.getElementById('login-tab').click();
+                    document.getElementById('login-email').value = userData.email;
+                    document.getElementById('login-password').value = userData.password;
+                }, 1500);
+            }
+        });
+
+        // Order Form Handler
+        document.getElementById('order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const orderData = {
+                packageName: document.getElementById('selected-package-name').textContent,
+                price: document.getElementById('selected-package-price').textContent,
+                game: document.getElementById('selected-package-game').textContent,
+                userId: document.getElementById('order-userid').value,
+                server: document.getElementById('order-server').value,
+                notes: document.getElementById('order-notes').value,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add to user orders
+            if (auth.addOrder(orderData)) {
+                // Show success message
+                alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
+                
+                // Send to WhatsApp
+                sendOrderToWhatsApp(orderData);
+                
+                // Close modal and reset form
+                closeOrderModal();
+                document.getElementById('order-form').reset();
+            }
+        });
+
+        // WhatsApp integration
+        function sendOrderToWhatsApp(orderData) {
+            const user = auth.getCurrentUser();
+            const message = `Halo DIURNAL! Saya ingin order joki:\n\n` +
+                           `📦 *PAKET:* ${orderData.packageName}\n` +
+                           `💰 *HARGA:* ${orderData.price}\n` +
+                           `🎮 *GAME:* ${orderData.game}\n` +
+                           `👤 *USER ID:* ${orderData.userId}\n` +
+                           `🌍 *SERVER:* ${orderData.server}\n` +
+                           `📝 *CATATAN:* ${orderData.notes || '-'}\n\n` +
+                           `*DATA PELANGGAN:*\n` +
+                           `Nama: ${user.firstName} ${user.lastName}\n` +
+                           `Username: ${user.username}\n` +
+                           `Email: ${user.email}\n\n` +
+                           `Saya sudah melakukan order via website.`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappURL = `https://wa.me/6281254737900?text=${encodedMessage}`;
+            
+            window.open(whatsappURL, '_blank');
+        }
+
+        // Tab Switching for Auth Modal
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('text-accent', 'border-accent');
+            loginTab.classList.remove('text-gray-400', 'border-transparent');
+            registerTab.classList.add('text-gray-400', 'border-transparent');
+            registerTab.classList.remove('text-accent', 'border-accent');
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('text-accent', 'border-accent');
+            registerTab.classList.remove('text-gray-400', 'border-transparent');
+            loginTab.classList.add('text-gray-400', 'border-transparent');
+            loginTab.classList.remove('text-accent', 'border-accent');
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        // Close modals when clicking outside
+        document.getElementById('auth-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAuthModal();
+        });
+
+        document.getElementById('profile-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeProfileModal();
+        });
+
+        document.getElementById('order-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeOrderModal();
+        });
+
+        // Simple animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+
+            const fadeInOnScroll = function() {
+                fadeElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.style.opacity = "1";
+                        element.style.transform = "translateY(0)";
+                    }
+                });
+            };
+
+            fadeElements.forEach(element => {
+                element.style.opacity = "0";
+                element.style.transform = "translateY(20px)";
+                element.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+            });
+
+            window.addEventListener('scroll', fadeInOnScroll);
+            fadeInOnScroll();
         });
     </script>
 </body>

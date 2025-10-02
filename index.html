@@ -136,6 +136,27 @@
         .nav-link:hover::after {
             width: 100%;
         }
+
+        /* Mobile Menu Styles */
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+
+        .menu-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body class="font-poppins">
@@ -159,12 +180,53 @@
 
             <div class="flex items-center space-x-4">
                 <button class="btn-primary px-6 py-2 rounded-full font-semibold">Order Sekarang</button>
-                <button class="md:hidden text-white">
+                <button id="menu-toggle" class="text-white md:hidden">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 h-full w-64 bg-black bg-opacity-95 backdrop-blur-lg z-40 p-6 md:hidden">
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-darkYellow to-accent flex items-center justify-center mr-2">
+                    <i class="fas fa-crown text-black text-sm"></i>
+                </div>
+                <span class="text-lg font-bold text-white">DIUR<span class="text-accent">NAL</span></span>
+            </div>
+            <button id="menu-close" class="text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="flex flex-col space-y-6">
+            <a href="#" class="text-white text-lg font-medium hover:text-accent transition">Beranda</a>
+            <a href="#layanan" class="text-white text-lg font-medium hover:text-accent transition">Layanan</a>
+            <a href="#harga" class="text-white text-lg font-medium hover:text-accent transition">Harga</a>
+            <a href="#testimoni" class="text-white text-lg font-medium hover:text-accent transition">Testimoni</a>
+            <a href="#kontak" class="text-white text-lg font-medium hover:text-accent transition">Kontak</a>
+            <button class="btn-primary w-full py-3 rounded-full font-bold mt-4">Order Sekarang</button>
+        </div>
+        
+        <div class="absolute bottom-6 left-6 right-6">
+            <div class="flex justify-center space-x-4">
+                <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-accent hover:text-black transition">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-accent hover:text-black transition">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-accent hover:text-black transition">
+                    <i class="fab fa-discord"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Menu Overlay -->
+    <div id="menu-overlay" class="menu-overlay fixed inset-0 bg-black bg-opacity-70 z-30 md:hidden"></div>
 
     <!-- Hero Section -->
     <section class="hero-bg min-h-screen flex items-center pt-20 pb-16 relative overflow-hidden">
@@ -568,6 +630,28 @@
     </footer>
 
     <script>
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuClose = document.getElementById('menu-close');
+        const menuOverlay = document.getElementById('menu-overlay');
+        
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+        
+        menuToggle.addEventListener('click', toggleMenu);
+        menuClose.addEventListener('click', toggleMenu);
+        menuOverlay.addEventListener('click', toggleMenu);
+        
+        // Close menu when clicking on menu links
+        const menuLinks = document.querySelectorAll('#mobile-menu a');
+        menuLinks.forEach(link => {
+            link.addEventListener('click', toggleMenu);
+        });
+
         // Simple animation on scroll
         document.addEventListener('DOMContentLoaded', function() {
             const fadeElements = document.querySelectorAll('.fade-in');

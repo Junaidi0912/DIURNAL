@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - DIURNAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkYellow: '#b58900',
+                        darkBlue: '#1a237e',
+                        darkBrown: '#5d4037',
+                        accent: '#ffd600'
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .admin-bg {
+            background: linear-gradient(135deg, rgba(26, 35, 126, 0.9) 0%, rgba(11, 11, 11, 0.95) 50%, rgba(179, 137, 0, 0.85) 100%);
+        }
+
+        .stats-card {
+            background: rgba(26, 35, 126, 0.1);
+            border: 1px solid rgba(179, 137, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(179, 137, 0, 0.2);
+        }
+
+        .data-table {
+            background: rgba(26, 35, 126, 0.05);
+            border: 1px solid rgba(179, 137, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #b58900, #ffd600);
+            color: #0a0a0a;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ffd600, #b58900);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(179, 137, 0, 0.3);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #ffd600;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, #b58900, #ffd600);
+            color: #0a0a0a;
+        }
+
+        .status-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-processing {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .online-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .new-notification {
+            animation: highlight 3s ease-in-out;
+        }
+
+        @keyframes highlight {
+            0% { background: rgba(255, 214, 0, 0.3); }
+            100% { background: transparent; }
+        }
+    </style>
+</head>
+<body class="font-poppins">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black bg-opacity-80 backdrop-blur-sm py-4">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-darkYellow to-accent flex items-center justify-center mr-3">
+                    <i class="fas fa-crown text-black"></i>
+                </div>
+                <a href="#" class="text-xl font-bold text-white">DIUR<span class="text-accent">NAL</span> <span class="text-sm text-accent">ADMIN</span></a>
+                <!-- Online Indicator -->
+                <div class="ml-4 flex items-center">
+                    <div class="w-2 h-2 bg-green-400 rounded-full online-dot mr-2"></div>
+                    <span class="text-green-400 text-sm" id="online-status">LIVE</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex space-x-8">
+                <button onclick="showTab('dashboard')" class="nav-link text-white hover:text-accent transition">Dashboard</button>
+                <button onclick="showTab('users')" class="nav-link text-white hover:text-accent transition">Users</button>
+                <button onclick="showTab('orders')" class="nav-link text-white hover:text-accent transition">Orders</button>
+                <button onclick="showTab('activity')" class="nav-link text-white hover:text-accent transition flex items-center">
+                    <i class="fas fa-bell mr-1"></i> Activity
+                    <span id="notification-badge" class="hidden ml-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                </button>
+                <button onclick="showTab('reports')" class="nav-link text-white hover:text-accent transition">Reports</button>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-black font-bold text-sm">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <span class="text-white">Admin</span>
+                </div>
+                <button onclick="exportData()" class="btn-primary px-4 py-2 rounded-full text-sm">
+                    <i class="fas fa-download mr-1"></i> Export
+                </button>
+                <button onclick="logout()" class="text-red-400 hover:text-red-300 transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-20 min-h-screen admin-bg">
+        <div class="container mx-auto px-6 py-8">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content">
+                <!-- Real-time Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stats-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="total-users">0</div>
+                        <div class="text-gray-300">Total Users</div>
+                        <div class="text-green-400 text-sm mt-2" id="users-today">+0 today</div>
+                    </div>
+                    <div class="stats-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="total-orders">0</div>
+                        <div class="text-gray-300">Total Orders</div>
+                        <div class="text-green-400 text-sm mt-2" id="orders-today">+0 today</div>
+                    </div>
+                    <div class="stats-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="total-revenue">Rp 0</div>
+                        <div class="text-gray-300">Total Revenue</div>
+                        <div class="text-green-400 text-sm mt-2" id="revenue-today">+Rp 0 today</div>
+                    </div>
+                    <div class="stats-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="online-now">0</div>
+                        <div class="text-gray-300">Online Now</div>
+                        <div class="text-green-400 text-sm mt-2" id="active-sessions">0 active sessions</div>
+                    </div>
+                </div>
+
+                <!-- Live Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Recent Logins -->
+                    <div class="data-table rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2 text-accent"></i> Recent Logins
+                            <span class="ml-2 bg-green-500 text-white text-xs rounded-full px-2 py-1" id="login-count">0</span>
+                        </h3>
+                        <div class="space-y-3 max-h-80 overflow-y-auto" id="recent-logins">
+                            <!-- Data will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders -->
+                    <div class="data-table rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-shopping-cart mr-2 text-accent"></i> Recent Orders
+                            <span class="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-1" id="order-count">0</span>
+                        </h3>
+                        <div class="space-y-3 max-h-80 overflow-y-auto" id="recent-orders">
+                            <!-- Data will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Monitoring -->
+                <div class="data-table rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-chart-line mr-2 text-accent"></i> Live Monitoring
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-accent" id="hourly-logins">0</div>
+                            <div class="text-gray-400 text-sm">Logins (Last Hour)</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-accent" id="hourly-orders">0</div>
+                            <div class="text-gray-400 text-sm">Orders (Last Hour)</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-accent" id="active-now">0</div>
+                            <div class="text-gray-400 text-sm">Active Right Now</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content hidden">
+                <div class="data-table rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-white">All Users <span class="text-accent" id="users-count">(0)</span></h3>
+                        <div class="flex space-x-4">
+                            <input type="text" id="user-search" placeholder="Search users..." 
+                                   class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                            <button onclick="exportUsers()" class="btn-primary px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-export mr-2"></i> Export Users
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="p-4 text-left text-accent">User</th>
+                                    <th class="p-4 text-left text-accent">Status</th>
+                                    <th class="p-4 text-left text-accent">Contact</th>
+                                    <th class="p-4 text-left text-accent">Orders</th>
+                                    <th class="p-4 text-left text-accent">Total Spent</th>
+                                    <th class="p-4 text-left text-accent">Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="orders-tab" class="tab-content hidden">
+                <div class="data-table rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-white">All Orders <span class="text-accent" id="orders-count">(0)</span></h3>
+                        <div class="flex space-x-4">
+                            <select id="order-filter" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            <button onclick="exportOrders()" class="btn-primary px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-export mr-2"></i> Export Orders
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="p-4 text-left text-accent">Order ID</th>
+                                    <th class="p-4 text-left text-accent">Customer</th>
+                                    <th class="p-4 text-left text-accent">Package</th>
+                                    <th class="p-4 text-left text-accent">Game</th>
+                                    <th class="p-4 text-left text-accent">Price</th>
+                                    <th class="p-4 text-left text-accent">Status</th>
+                                    <th class="p-4 text-left text-accent">Date</th>
+                                    <th class="p-4 text-left text-accent">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div id="activity-tab" class="tab-content hidden">
+                <div class="data-table rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-white">Live Activity Monitor</h3>
+                        <div class="flex space-x-4">
+                            <button onclick="clearActivityLogs()" class="btn-primary px-4 py-2 rounded-lg">
+                                <i class="fas fa-trash mr-2"></i> Clear Logs
+                            </button>
+                            <button onclick="exportActivity()" class="btn-primary px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-export mr-2"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Activity Feed -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-white mb-3">Real-time Events</h4>
+                        <div class="space-y-2 max-h-60 overflow-y-auto" id="live-activity-feed">
+                            <!-- Activity events will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Activity Statistics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-xl font-bold text-accent" id="total-logins">0</div>
+                            <div class="text-gray-400 text-sm">Total Logins</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-xl font-bold text-accent" id="total-orders-activity">0</div>
+                            <div class="text-gray-400 text-sm">Total Orders</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-xl font-bold text-accent" id="peak-hour">-</div>
+                            <div class="text-gray-400 text-sm">Peak Activity Hour</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-xl font-bold text-accent" id="avg-session">0m</div>
+                            <div class="text-gray-400 text-sm">Avg Session Time</div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Activity Log -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-3">Detailed Activity Log</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="p-3 text-left text-accent">Time</th>
+                                        <th class="p-3 text-left text-accent">User</th>
+                                        <th class="p-3 text-left text-accent">Action</th>
+                                        <th class="p-3 text-left text-accent">Details</th>
+                                        <th class="p-3 text-left text-accent">IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-log">
+                                    <!-- Activity logs will appear here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reports-tab" class="tab-content hidden">
+                <!-- ... (same as before) ... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Global variables for real-time monitoring
+        let adminData = {
+            users: [],
+            orders: [],
+            activityLogs: [],
+            realTimeStats: {
+                onlineUsers: new Set(),
+                recentActivities: [],
+                hourlyStats: {
+                    logins: 0,
+                    orders: 0
+                }
+            }
+        };
+
+        let notificationCount = 0;
+
+        // Initialize admin dashboard with real-time updates
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeRealTimeMonitoring();
+            loadAllData();
+            
+            // Real-time updates
+            setInterval(loadAllData, 5000); // Update every 5 seconds
+            setInterval(updateRealTimeStats, 2000); // Real-time stats every 2 seconds
+            setInterval(checkForNewActivity, 3000); // Check new activity every 3 seconds
+        });
+
+        // Real-time monitoring system
+        function initializeRealTimeMonitoring() {
+            // Initialize activity logs from localStorage
+            adminData.activityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+            
+            // Simulate some online users (in real app, this would come from server)
+            simulateOnlineUsers();
+        }
+
+        // Load all data from localStorage with real-time detection
+        function loadAllData() {
+            try {
+                const previousUserCount = adminData.users.length;
+                const previousOrderCount = adminData.orders.length;
+
+                // Load users
+                const usersData = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+                adminData.users = usersData;
+
+                // Process orders from all users
+                adminData.orders = [];
+                usersData.forEach(user => {
+                    if (user.orders && user.orders.length > 0) {
+                        user.orders.forEach(order => {
+                            adminData.orders.push({
+                                ...order,
+                                customerName: `${user.firstName} ${user.lastName}`,
+                                customerEmail: user.email,
+                                customerUsername: user.username
+                            });
+                        });
+                    }
+                });
+
+                // Sort orders by date (newest first)
+                adminData.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                // Load activity logs
+                const newActivityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+                
+                // Check for new activities
+                if (newActivityLogs.length > adminData.activityLogs.length) {
+                    const newActivities = newActivityLogs.slice(adminData.activityLogs.length);
+                    newActivities.forEach(activity => {
+                        addLiveActivity(activity);
+                    });
+                    adminData.activityLogs = newActivityLogs;
+                }
+
+                // Calculate statistics
+                calculateRealTimeStatistics();
+                
+                // Update UI
+                updateDashboard();
+                updateUsersTable();
+                updateOrdersTable();
+                updateActivityTab();
+
+                // Check for new data and show notifications
+                if (usersData.length > previousUserCount) {
+                    showNotification('New user registered!', 'success');
+                }
+                if (adminData.orders.length > previousOrderCount) {
+                    showNotification('New order placed!', 'info');
+                }
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Real-time statistics calculation
+        function calculateRealTimeStatistics() {
+            const stats = adminData.realTimeStats;
+            const now = new Date();
+            const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+            const today = new Date().toDateString();
+
+            // Calculate today's stats
+            const todayLogins = adminData.activityLogs.filter(log => 
+                log.action === 'login' && new Date(log.timestamp).toDateString() === today
+            ).length;
+
+            const todayOrders = adminData.orders.filter(order => 
+                new Date(order.createdAt).toDateString() === today
+            ).length;
+
+            const todayRevenue = adminData.orders
+                .filter(order => new Date(order.createdAt).toDateString() === today)
+                .reduce((total, order) => total + (parseInt(order.price.replace(/\D/g, '')) || 0), 0);
+
+            // Calculate hourly stats
+            stats.hourlyStats.logins = adminData.activityLogs.filter(log => 
+                log.action === 'login' && new Date(log.timestamp) > oneHourAgo
+            ).length;
+
+            stats.hourlyStats.orders = adminData.orders.filter(order => 
+                new Date(order.createdAt) > oneHourAgo
+            ).length;
+
+            // Update dashboard elements
+            document.getElementById('users-today').textContent = `+${todayLogins} today`;
+            document.getElementById('orders-today').textContent = `+${todayOrders} today`;
+            document.getElementById('revenue-today').textContent = `+Rp ${todayRevenue.toLocaleString()} today`;
+            document.getElementById('hourly-logins').textContent = stats.hourlyStats.logins;
+            document.getElementById('hourly-orders').textContent = stats.hourlyStats.orders;
+            document.getElementById('active-now').textContent = stats.onlineUsers.size;
+        }
+
+        // Update Dashboard with real-time data
+        function updateDashboard() {
+            const stats = adminData.realTimeStats;
+            
+            // Update main statistics
+            document.getElementById('total-users').textContent = adminData.users.length.toLocaleString();
+            document.getElementById('total-orders').textContent = adminData.orders.length.toLocaleString();
+            document.getElementById('total-revenue').textContent = `Rp ${adminData.orders.reduce((total, order) => total + (parseInt(order.price.replace(/\D/g, '')) || 0), 0).toLocaleString()}`;
+            document.getElementById('online-now').textContent = stats.onlineUsers.size;
+            document.getElementById('active-sessions').textContent = `${stats.onlineUsers.size} active sessions`;
+
+            // Update recent logins
+            const recentLogins = adminData.activityLogs
+                .filter(log => log.action === 'login')
+                .slice(0, 8);
+            
+            document.getElementById('recent-logins').innerHTML = recentLogins.map(login => `
+                <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg new-notification">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                        <div>
+                            <div class="text-white font-semibold">${login.username}</div>
+                            <div class="text-gray-400 text-sm">${login.email}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-accent text-sm">${formatTimeAgo(login.timestamp)}</div>
+                        <div class="text-gray-400 text-xs">${login.ip || 'Unknown IP'}</div>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-center p-4">No recent logins</div>';
+
+            document.getElementById('login-count').textContent = recentLogins.length;
+
+            // Update recent orders
+            const recentOrders = adminData.orders.slice(0, 8);
+            document.getElementById('recent-orders').innerHTML = recentOrders.map(order => `
+                <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg new-notification">
+                    <div>
+                        <div class="text-white font-semibold">${order.packageName}</div>
+                        <div class="text-gray-400 text-sm">${order.customerName} • ${order.game}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-accent font-semibold">${order.price}</div>
+                        <span class="px-2 py-1 rounded-full text-xs ${
+                            order.status === 'completed' ? 'status-completed' :
+                            order.status === 'processing' ? 'status-processing' : 'status-pending'
+                        }">
+                            ${order.status}
+                        </span>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-center p-4">No recent orders</div>';
+
+            document.getElementById('order-count').textContent = recentOrders.length;
+        }
+
+        // Update Users Table with online status
+        function updateUsersTable() {
+            const usersTable = document.getElementById('users-table');
+            const stats = adminData.realTimeStats;
+            
+            usersTable.innerHTML = adminData.users.map(user => {
+                const totalOrders = user.orders ? user.orders.length : 0;
+                const totalSpent = user.orders ? user.orders.reduce((sum, order) => {
+                    return sum + (parseInt(order.price.replace(/\D/g, '')) || 0);
+                }, 0) : 0;
+                
+                const isOnline = stats.onlineUsers.has(user.id);
+                const lastActivity = user.lastLogin ? new Date(user.lastLogin) : null;
+
+                return `
+                    <tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+                        <td class="p-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full mr-3 ${isOnline ? 'bg-green-400' : 'bg-gray-400'}"></div>
+                                <div>
+                                    <div class="font-semibold text-white">${user.firstName} ${user.lastName}</div>
+                                    <div class="text-gray-400 text-sm">@${user.username}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-full text-xs ${isOnline ? 'status-completed' : 'status-pending'}">
+                                ${isOnline ? 'Online' : 'Offline'}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-white">${user.email}</div>
+                            <div class="text-gray-400 text-sm">${user.phone || 'No phone'}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="text-accent font-semibold">${totalOrders}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="text-green-400 font-semibold">Rp ${totalSpent.toLocaleString()}</span>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-gray-300 text-sm">${lastActivity ? formatTimeAgo(lastActivity) : 'Never'}</div>
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="p-4 text-center text-gray-400">No users found</td></tr>';
+
+            document.getElementById('users-count').textContent = `(${adminData.users.length})`;
+        }
+
+        // Update Orders Table
+        function updateOrdersTable() {
+            const ordersTable = document.getElementById('orders-table');
+            const filter = document.getElementById('order-filter').value;
+            
+            let filteredOrders = adminData.orders;
+            if (filter !== 'all') {
+                filteredOrders = adminData.orders.filter(order => order.status === filter);
+            }
+
+            ordersTable.innerHTML = filteredOrders.map(order => `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+                    <td class="p-4">
+                        <div class="text-white font-mono">#${order.id.slice(-6)}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-white font-semibold">${order.customerName}</div>
+                        <div class="text-gray-400 text-sm">${order.customerEmail}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-white">${order.packageName}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-accent">${order.game}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-green-400 font-semibold">${order.price}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-full text-xs ${
+                            order.status === 'completed' ? 'status-completed' :
+                            order.status === 'processing' ? 'status-processing' : 'status-pending'
+                        }">
+                            ${order.status}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-gray-300 text-sm">${new Date(order.createdAt).toLocaleDateString('id-ID')}</div>
+                        <div class="text-gray-400 text-xs">${formatTimeAgo(order.createdAt)}</div>
+                    </td>
+                    <td class="p-4">
+                        <button onclick="updateOrderStatus('${order.id}', 'processing')" class="text-blue-400 hover:text-blue-300 mr-2" title="Mark as Processing">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button onclick="updateOrderStatus('${order.id}', 'completed')" class="text-green-400 hover:text-green-300 mr-2" title="Mark as Completed">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" class="p-4 text-center text-gray-400">No orders found</td></tr>';
+
+            document.getElementById('orders-count').textContent = `(${filteredOrders.length})`;
+        }
+
+        // Update Activity Tab
+        function updateActivityTab() {
+            const activityLog = document.getElementById('activity-log');
+            const liveFeed = document.getElementById('live-activity-feed');
+            
+            // Update live feed (last 10 activities)
+            const recentActivities = adminData.activityLogs.slice(-10).reverse();
+            liveFeed.innerHTML = recentActivities.map(activity => `
+                <div class="flex items-center p-2 bg-gray-800 rounded-lg">
+                    <div class="w-2 h-2 bg-accent rounded-full mr-3"></div>
+                    <div class="flex-1">
+                        <span class="text-white">${activity.username}</span>
+                        <span class="text-gray-400">${getActivityDescription(activity)}</span>
+                    </div>
+                    <div class="text-gray-400 text-sm">${formatTimeAgo(activity.timestamp)}</div>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-center p-4">No activity yet</div>';
+
+            // Update detailed log
+            activityLog.innerHTML = adminData.activityLogs.slice().reverse().map(activity => `
+                <tr class="border-b border-gray-700">
+                    <td class="p-3 text-gray-300 text-sm">${new Date(activity.timestamp).toLocaleString('id-ID')}</td>
+                    <td class="p-3">
+                        <div class="text-white">${activity.username}</div>
+                        <div class="text-gray-400 text-sm">${activity.email}</div>
+                    </td>
+                    <td class="p-3">
+                        <span class="capitalize text-accent">${activity.action}</span>
+                    </td>
+                    <td class="p-3 text-gray-300 text-sm">${activity.details || '-'}</td>
+                    <td class="p-3 text-gray-400 text-sm">${activity.ip || 'Unknown'}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="p-4 text-center text-gray-400">No activity logs</td></tr>';
+
+            // Update activity statistics
+            document.getElementById('total-logins').textContent = 
+                adminData.activityLogs.filter(log => log.action === 'login').length;
+            document.getElementById('total-orders-activity').textContent = adminData.orders.length;
+        }
+
+        // Real-time functions
+        function updateRealTimeStats() {
+            // Simulate real-time changes
+            const stats = adminData.realTimeStats;
+            
+            // Randomly add/remove online users for demo
+            if (Math.random() > 0.7 && adminData.users.length > 0) {
+                const randomUser = adminData.users[Math.floor(Math.random() * adminData.users.length)];
+                if (stats.onlineUsers.has(randomUser.id)) {
+                    stats.onlineUsers.delete(randomUser.id);
+                } else {
+                    stats.onlineUsers.add(randomUser.id);
+                }
+            }
+
+            updateDashboard();
+            updateUsersTable();
+        }
+
+        function checkForNewActivity() {
+            // Check for new activity logs
+            const currentLogCount = adminData.activityLogs.length;
+            const newLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+            
+            if (newLogs.length > currentLogCount) {
+                const newActivities = newLogs.slice(currentLogCount);
+                newActivities.forEach(activity => {
+                    addLiveActivity(activity);
+                    showNotification(`New activity: ${activity.username} ${activity.action}`, 'info');
+                });
+                adminData.activityLogs = newLogs;
+                updateActivityTab();
+            }
+        }
+
+        function addLiveActivity(activity) {
+            adminData.realTimeStats.recentActivities.unshift(activity);
+            if (adminData.realTimeStats.recentActivities.length > 20) {
+                adminData.realTimeStats.recentActivities.pop();
+            }
+            
+            // Update notification badge
+            notificationCount++;
+            document.getElementById('notification-badge').textContent = notificationCount;
+            document.getElementById('notification-badge').classList.remove('hidden');
+        }
+
+        // Utility functions
+        function formatTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diff = now - time;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
+        function getActivityDescription(activity) {
+            switch(activity.action) {
+                case 'login': return ' logged in';
+                case 'order': return ' placed an order';
+                case 'register': return ' registered';
+                default: return ` ${activity.action}`;
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-6 p-4 rounded-lg shadow-lg z-50 transform translate-x-0 transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-bell mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function simulateOnlineUsers() {
+            // Simulate some online users for demo
+            if (adminData.users.length > 0) {
+                const onlineCount = Math.min(3, adminData.users.length);
+                for (let i = 0; i < onlineCount; i++) {
+                    adminData.realTimeStats.onlineUsers.add(adminData.users[i].id);
+                }
+            }
+        }
+
+        // Tab Navigation and other functions remain the same...
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Clear notifications when viewing activity tab
+            if (tabName === 'activity') {
+                notificationCount = 0;
+                document.getElementById('notification-badge').classList.add('hidden');
+            }
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+            let orderUpdated = false;
+
+            users.forEach(user => {
+                if (user.orders) {
+                    user.orders.forEach(order => {
+                        if (order.id === orderId) {
+                            order.status = newStatus;
+                            orderUpdated = true;
+                            
+                            // Log the status change
+                            const activity = {
+                                timestamp: new Date().toISOString(),
+                                username: user.username,
+                                email: user.email,
+                                action: 'order_update',
+                                details: `Order ${orderId.slice(-6)} status changed to ${newStatus}`,
+                                ip: 'admin'
+                            };
+                            adminData.activityLogs.push(activity);
+                            localStorage.setItem('diurnal_activity_logs', JSON.stringify(adminData.activityLogs));
+                        }
+                    });
+                }
+            });
+
+            if (orderUpdated) {
+                localStorage.setItem('diurnal_users', JSON.stringify(users));
+                loadAllData();
+                showNotification(`Order status updated to ${newStatus}`, 'success');
+            }
+        }
+
+        function clearActivityLogs() {
+            if (confirm('Are you sure you want to clear all activity logs?')) {
+                adminData.activityLogs = [];
+                localStorage.setItem('diurnal_activity_logs', JSON.stringify([]));
+                updateActivityTab();
+                showNotification('Activity logs cleared', 'info');
+            }
+        }
+
+        function exportActivity() {
+            const activityData = adminData.activityLogs.map(log => ({
+                Timestamp: new Date(log.timestamp).toLocaleString('id-ID'),
+                Username: log.username,
+                Email: log.email,
+                Action: log.action,
+                Details: log.details || '-',
+                IP: log.ip || 'Unknown'
+            }));
+
+            exportToCSV(activityData, 'diurnal_activity_export');
+        }
+
+        function exportToCSV(data, filename) {
+            if (data.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => headers.map(header => `"${row[header]}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}_${new Date().getTime()}.csv`;
+            link.click();
+        }
+
+        // Export functions for users and orders
+        function exportUsers() {
+            const usersData = adminData.users.map(user => ({
+                Name: `${user.firstName} ${user.lastName}`,
+                Username: user.username,
+                Email: user.email,
+                'Total Orders': user.orders ? user.orders.length : 0,
+                'Total Spent': user.orders ? user.orders.reduce((sum, order) => sum + (parseInt(order.price.replace(/\D/g, '')) || 0), 0) : 0,
+                'Joined Date': new Date(user.createdAt).toLocaleDateString('id-ID'),
+                'Last Login': user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('id-ID') : 'Never',
+                'Status': adminData.realTimeStats.onlineUsers.has(user.id) ? 'Online' : 'Offline'
+            }));
+
+            exportToCSV(usersData, 'diurnal_users_export');
+        }
+
+        function exportOrders() {
+            const ordersData = adminData.orders.map(order => ({
+                'Order ID': order.id.slice(-6),
+                'Customer Name': order.customerName,
+                'Customer Email': order.customerEmail,
+                'Package': order.packageName,
+                'Game': order.game,
+                'Price': order.price,
+                'Status': order.status,
+                'Order Date': new Date(order.createdAt).toLocaleDateString('id-ID'),
+                'User ID': order.userId,
+                'Server': order.server
+            }));
+
+            exportToCSV(ordersData, 'diurnal_orders_export');
+        }
+
+        function exportData() {
+            const data = {
+                users: adminData.users,
+                orders: adminData.orders,
+                activityLogs: adminData.activityLogs,
+                stats: adminData.realTimeStats,
+                exportedAt: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `diurnal_backup_${new Date().getTime()}.json`;
+            link.click();
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Search and filter functionality
+        document.getElementById('user-search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#users-table tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        document.getElementById('order-filter').addEventListener('change', updateOrdersTable);
+    </script>
+</body>
+</html>

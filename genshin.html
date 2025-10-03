@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paket Genshin Impact - DIURNAL</title>
-    <script src="https://cdn.tailwindcss.com">
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -884,6 +883,11 @@
                 this.users.push(newUser);
                 this.saveToStorage();
                 
+                // Auto login setelah register
+                this.currentUser = newUser;
+                localStorage.setItem('diurnal_current_user', JSON.stringify(newUser));
+                this.updateUI();
+                
                 // Track registration activity
                 this.trackActivity('register', 'New user registration', newUser.email);
                 
@@ -908,6 +912,13 @@
                     return { success: true, message: 'Login berhasil!' };
                 }
                 return { success: false, message: 'Email atau password salah!' };
+            }
+
+            logout() {
+                this.trackActivity('logout', 'User logged out');
+                this.currentUser = null;
+                localStorage.removeItem('diurnal_current_user');
+                this.updateUI();
             }
 
             trackActivity(action, details, email = null) {
@@ -960,6 +971,12 @@
                 if (userData.username.length < 3) {
                     errors.push('Username minimal 3 karakter');
                 }
+                if (!userData.firstName || userData.firstName.trim() === '') {
+                    errors.push('Nama depan harus diisi');
+                }
+                if (!userData.lastName || userData.lastName.trim() === '') {
+                    errors.push('Nama belakang harus diisi');
+                }
                 
                 return errors;
             }
@@ -1009,12 +1026,16 @@
                     createdAt: new Date().toISOString()
                 };
 
+                if (!this.currentUser.orders) {
+                    this.currentUser.orders = [];
+                }
+
                 this.currentUser.orders.unshift(order);
                 
                 const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
                 if (userIndex !== -1) {
                     this.users[userIndex] = this.currentUser;
-                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                    this.saveToStorage();
                     localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
                 }
 
@@ -1025,7 +1046,7 @@
             }
 
             getUserOrders() {
-                return this.currentUser ? this.currentUser.orders : [];
+                return this.currentUser ? (this.currentUser.orders || []) : [];
             }
 
             updateLiveStats() {
@@ -1051,8 +1072,11 @@
                 }, 0);
 
                 // Update live stats display
-                document.getElementById('active-users').textContent = activeUsers;
-                document.getElementById('today-orders').textContent = todayOrders;
+                const activeUsersEl = document.getElementById('active-users');
+                const todayOrdersEl = document.getElementById('today-orders');
+                
+                if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+                if (todayOrdersEl) todayOrdersEl.textContent = todayOrders;
 
                 // Update every 30 seconds
                 setTimeout(() => this.updateLiveStats(), 30000);
@@ -1069,9 +1093,19 @@
 
         function closeAuthModal() {
             document.getElementById('auth-modal').classList.add('hidden');
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            // Clear messages
+            document.getElementById('login-message').classList.add('hidden');
+            document.getElementById('register-message').classList.add('hidden');
         }
 
         function showProfile() {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                return;
+            }
             loadProfileData();
             document.getElementById('profile-modal').classList.remove('hidden');
             closeMobileMenu();
@@ -1139,7 +1173,8 @@
             document.getElementById('processing-orders').textContent = orders.filter(o => o.status === 'processing').length;
             
             const totalSpent = orders.reduce((sum, order) => {
-                return sum + parseInt(order.price.replace(/\D/g, '') || 0);
+                const price = order.price ? parseInt(order.price.replace(/\D/g, '')) || 0 : 0;
+                return sum + price;
             }, 0);
             document.getElementById('total-spent').textContent = `Rp ${totalSpent.toLocaleString()}`;
         }
@@ -1170,7 +1205,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
-                        <span class="text-gray-400 text-sm">ID: ${order.id.slice(-6)}</span>
+                        <span class="text-gray-400 text-sm">ID: ${order.id ? order.id.slice(-6) : 'N/A'}</span>
                     </div>
                 </div>
             `).join('');
@@ -1187,10 +1222,10 @@
         }
 
         function logout() {
-            auth.trackActivity('logout', 'User logged out');
             auth.logout();
             closeProfileModal();
             closeMobileMenu();
+            closeAuthModal();
         }
 
         // Mobile Menu Functions
@@ -1215,96 +1250,134 @@
             document.body.style.overflow = '';
         }
 
-        menuToggle.addEventListener('click', toggleMobileMenu);
-        menuClose.addEventListener('click', closeMobileMenu);
-        menuOverlay.addEventListener('click', closeMobileMenu);
+        if (menuToggle) menuToggle.addEventListener('click', toggleMobileMenu);
+        if (menuClose) menuClose.addEventListener('click', closeMobileMenu);
+        if (menuOverlay) menuOverlay.addEventListener('click', closeMobileMenu);
 
-        // Auth Form Handlers
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const messageDiv = document.getElementById('login-message');
+        // Auth Form Handlers - FIXED
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
 
-            const result = auth.login(email, password);
-            
-            messageDiv.textContent = result.message;
-            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
-            messageDiv.classList.remove('hidden');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('login-email').value;
+                    const password = document.getElementById('login-password').value;
+                    const messageDiv = document.getElementById('login-message');
 
-            if (result.success) {
-                setTimeout(() => {
-                    closeAuthModal();
-                }, 1000);
-            }
-        });
+                    const result = auth.login(email, password);
+                    
+                    messageDiv.textContent = result.message;
+                    messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                    messageDiv.classList.remove('hidden');
 
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userData = {
-                firstName: document.getElementById('first-name').value,
-                lastName: document.getElementById('last-name').value,
-                username: document.getElementById('reg-username').value,
-                email: document.getElementById('reg-email').value,
-                password: document.getElementById('reg-password').value
-            };
-
-            const confirmPassword = document.getElementById('reg-confirm-password').value;
-            const messageDiv = document.getElementById('register-message');
-
-            if (userData.password !== confirmPassword) {
-                messageDiv.textContent = 'Password tidak cocok!';
-                messageDiv.className = 'mt-4 text-center text-red-400';
-                messageDiv.classList.remove('hidden');
-                return;
+                    if (result.success) {
+                        setTimeout(() => {
+                            closeAuthModal();
+                            messageDiv.classList.add('hidden');
+                        }, 1000);
+                    }
+                });
             }
 
-            const result = auth.register(userData);
-            
-            messageDiv.textContent = result.message;
-            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
-            messageDiv.classList.remove('hidden');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const userData = {
+                        firstName: document.getElementById('first-name').value,
+                        lastName: document.getElementById('last-name').value,
+                        username: document.getElementById('reg-username').value,
+                        email: document.getElementById('reg-email').value,
+                        password: document.getElementById('reg-password').value
+                    };
 
-            if (result.success) {
-                setTimeout(() => {
-                    document.getElementById('login-tab').click();
-                    document.getElementById('login-email').value = userData.email;
-                    document.getElementById('login-password').value = userData.password;
-                }, 1500);
+                    const confirmPassword = document.getElementById('reg-confirm-password').value;
+                    const messageDiv = document.getElementById('register-message');
+
+                    if (userData.password !== confirmPassword) {
+                        messageDiv.textContent = 'Password tidak cocok!';
+                        messageDiv.className = 'mt-4 text-center text-red-400';
+                        messageDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    const result = auth.register(userData);
+                    
+                    messageDiv.textContent = result.message;
+                    messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                    messageDiv.classList.remove('hidden');
+
+                    if (result.success) {
+                        setTimeout(() => {
+                            closeAuthModal();
+                            messageDiv.classList.add('hidden');
+                        }, 1000);
+                    }
+                });
             }
-        });
 
-        // Order Form Handler
-        document.getElementById('order-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const orderData = {
-                packageName: document.getElementById('selected-package-name').textContent,
-                price: document.getElementById('selected-package-price').textContent,
-                game: document.getElementById('selected-package-game').textContent,
-                userId: document.getElementById('order-userid').value,
-                server: document.getElementById('order-server').value,
-                notes: document.getElementById('order-notes').value,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-            
-            // Add to user orders
-            if (auth.addOrder(orderData)) {
-                // Show success message
-                alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
-                
-                // Send to WhatsApp
-                sendOrderToWhatsApp(orderData);
-                
-                // Close modal and reset form
-                closeOrderModal();
-                document.getElementById('order-form').reset();
-                
-                // Update live stats
-                auth.updateLiveStats();
+            // Order Form Handler
+            const orderForm = document.getElementById('order-form');
+            if (orderForm) {
+                orderForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const orderData = {
+                        packageName: document.getElementById('selected-package-name').textContent,
+                        price: document.getElementById('selected-package-price').textContent,
+                        game: document.getElementById('selected-package-game').textContent,
+                        userId: document.getElementById('order-userid').value,
+                        server: document.getElementById('order-server').value,
+                        notes: document.getElementById('order-notes').value,
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Add to user orders
+                    if (auth.addOrder(orderData)) {
+                        // Show success message
+                        alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
+                        
+                        // Send to WhatsApp
+                        sendOrderToWhatsApp(orderData);
+                        
+                        // Close modal and reset form
+                        closeOrderModal();
+                        document.getElementById('order-form').reset();
+                        
+                        // Update live stats
+                        auth.updateLiveStats();
+                    }
+                });
+            }
+
+            // Tab Switching for Auth Modal
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+            const loginFormDiv = document.getElementById('login-form');
+            const registerFormDiv = document.getElementById('register-form');
+
+            if (loginTab && registerTab) {
+                loginTab.addEventListener('click', () => {
+                    loginTab.classList.add('text-accent', 'border-accent');
+                    loginTab.classList.remove('text-gray-400', 'border-transparent');
+                    registerTab.classList.add('text-gray-400', 'border-transparent');
+                    registerTab.classList.remove('text-accent', 'border-accent');
+                    loginFormDiv.classList.remove('hidden');
+                    registerFormDiv.classList.add('hidden');
+                });
+
+                registerTab.addEventListener('click', () => {
+                    registerTab.classList.add('text-accent', 'border-accent');
+                    registerTab.classList.remove('text-gray-400', 'border-transparent');
+                    loginTab.classList.add('text-gray-400', 'border-transparent');
+                    loginTab.classList.remove('text-accent', 'border-accent');
+                    registerFormDiv.classList.remove('hidden');
+                    loginFormDiv.classList.add('hidden');
+                });
             }
         });
 
@@ -1330,30 +1403,6 @@
             window.open(whatsappURL, '_blank');
         }
 
-        // Tab Switching for Auth Modal
-        const loginTab = document.getElementById('login-tab');
-        const registerTab = document.getElementById('register-tab');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('text-accent', 'border-accent');
-            loginTab.classList.remove('text-gray-400', 'border-transparent');
-            registerTab.classList.add('text-gray-400', 'border-transparent');
-            registerTab.classList.remove('text-accent', 'border-accent');
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
-        });
-
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('text-accent', 'border-accent');
-            registerTab.classList.remove('text-gray-400', 'border-transparent');
-            loginTab.classList.add('text-gray-400', 'border-transparent');
-            loginTab.classList.remove('text-accent', 'border-accent');
-            registerForm.classList.remove('hidden');
-            loginForm.classList.add('hidden');
-        });
-
         // Close modals when clicking outside
         document.getElementById('auth-modal').addEventListener('click', function(e) {
             if (e.target === this) closeAuthModal();
@@ -1365,54 +1414,6 @@
 
         document.getElementById('order-modal').addEventListener('click', function(e) {
             if (e.target === this) closeOrderModal();
-        });
-
-        // Track page interactions
-        document.addEventListener('DOMContentLoaded', function() {
-            // Track package views
-            const packageButtons = document.querySelectorAll('button[onclick*="orderPackage"]');
-            packageButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const packageName = this.closest('.package-card').querySelector('h3').textContent;
-                    auth.trackActivity('package_view', `Viewed package: ${packageName}`);
-                });
-            });
-
-            // Track CTA clicks
-            const ctaButtons = document.querySelectorAll('.btn-primary');
-            ctaButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    if (this.textContent.includes('Order Sekarang')) {
-                        auth.trackActivity('cta_click', 'Clicked Order Sekarang button');
-                    }
-                });
-            });
-        });
-
-        // Simple animation on scroll
-        document.addEventListener('DOMContentLoaded', function() {
-            const fadeElements = document.querySelectorAll('.fade-in');
-
-            const fadeInOnScroll = function() {
-                fadeElements.forEach(element => {
-                    const elementTop = element.getBoundingClientRect().top;
-                    const elementVisible = 150;
-
-                    if (elementTop < window.innerHeight - elementVisible) {
-                        element.style.opacity = "1";
-                        element.style.transform = "translateY(0)";
-                    }
-                });
-            };
-
-            fadeElements.forEach(element => {
-                element.style.opacity = "0";
-                element.style.transform = "translateY(20px)";
-                element.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-            });
-
-            window.addEventListener('scroll', fadeInOnScroll);
-            fadeInOnScroll();
         });
     </script>
 </body>

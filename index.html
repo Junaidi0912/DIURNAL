@@ -185,6 +185,32 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Admin Panel Styles */
+        .admin-sidebar {
+            background: rgba(11, 11, 11, 0.95);
+            border-right: 1px solid rgba(179, 137, 0, 0.3);
+        }
+
+        .admin-content {
+            background: rgba(11, 11, 11, 0.9);
+        }
+
+        .admin-card {
+            background: rgba(26, 35, 126, 0.1);
+            border: 1px solid rgba(179, 137, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(179, 137, 0, 0.3);
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(26, 35, 126, 0.2), rgba(11, 11, 11, 0.8));
+            border: 1px solid rgba(179, 137, 0, 0.3);
+        }
     </style>
 </head>
 <body class="font-poppins">
@@ -207,6 +233,13 @@
             </div>
 
             <div class="flex items-center space-x-4">
+                <!-- Admin Panel Link (tampil jika admin) -->
+                <div id="admin-link" class="hidden">
+                    <a href="#admin" onclick="showAdminPanel()" class="text-white hover:text-accent transition">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </a>
+                </div>
+
                 <!-- User Menu (tampil jika login) -->
                 <div id="user-menu" class="hidden flex items-center space-x-4">
                     <div class="flex items-center space-x-3">
@@ -268,6 +301,13 @@
             <a href="#testimoni" class="text-white text-lg font-medium hover:text-accent transition">Testimoni</a>
             <a href="#kontak" class="text-white text-lg font-medium hover:text-accent transition">Kontak</a>
             
+            <!-- Mobile Admin Link -->
+            <div id="mobile-admin-link" class="hidden">
+                <a href="#admin" onclick="showAdminPanel()" class="text-white text-lg font-medium hover:text-accent transition text-left">
+                    <i class="fas fa-cog mr-2"></i> Admin Panel
+                </a>
+            </div>
+            
             <!-- Mobile Auth Buttons -->
             <div id="mobile-auth-buttons" class="flex flex-col space-y-3">
                 <button onclick="showAuthModal()" class="text-white text-lg font-medium hover:text-accent transition text-left">Login</button>
@@ -309,6 +349,11 @@
     <!-- Auth Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
         <div class="auth-card rounded-2xl p-8 max-w-md w-full">
+            <!-- Close Button -->
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
             <!-- Tab Navigation -->
             <div class="flex mb-8 border-b border-gray-700">
                 <button id="login-tab" class="flex-1 py-3 text-center font-semibold text-accent border-b-2 border-accent">
@@ -467,6 +512,185 @@
                         <div id="orders-list" class="space-y-4">
                             <p class="text-gray-400 text-center">Belum ada order</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex">
+        <!-- Sidebar -->
+        <div class="admin-sidebar w-64 p-6 overflow-y-auto">
+            <div class="flex items-center mb-8">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-darkYellow to-accent flex items-center justify-center mr-3">
+                    <i class="fas fa-crown text-black"></i>
+                </div>
+                <span class="text-xl font-bold text-white">DIUR<span class="text-accent">NAL</span></span>
+            </div>
+
+            <nav class="space-y-2">
+                <button onclick="showAdminSection('dashboard')" class="w-full text-left px-4 py-3 bg-accent text-black rounded-lg font-semibold">
+                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                </button>
+                <button onclick="showAdminSection('users')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-users mr-2"></i> Manajemen User
+                </button>
+                <button onclick="showAdminSection('orders')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-shopping-cart mr-2"></i> Manajemen Order
+                </button>
+                <button onclick="showAdminSection('packages')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-box mr-2"></i> Paket Layanan
+                </button>
+                <button onclick="showAdminSection('settings')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                </button>
+            </nav>
+
+            <div class="mt-8 pt-8 border-t border-gray-700">
+                <button onclick="closeAdminPanel()" class="w-full text-left px-4 py-3 text-red-400 hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-times mr-2"></i> Tutup Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="admin-content flex-1 p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Admin Panel</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-400">Selamat datang, <span id="admin-name" class="text-accent font-semibold">Admin</span></span>
+                    <button onclick="logout()" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="admin-dashboard-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="admin-total-users">0</div>
+                        <div class="text-gray-400">Total User</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-green-400 mb-2" id="admin-total-orders">0</div>
+                        <div class="text-gray-400">Total Order</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-blue-400 mb-2" id="admin-revenue">Rp 0</div>
+                        <div class="text-gray-400">Total Pendapatan</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-yellow-400 mb-2" id="admin-pending-orders">0</div>
+                        <div class="text-gray-400">Order Pending</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="admin-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Order Terbaru</h3>
+                        <div id="admin-recent-orders" class="space-y-4">
+                            <p class="text-gray-400 text-center">Belum ada order</p>
+                        </div>
+                    </div>
+
+                    <div class="admin-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Statistik Game</h3>
+                        <div id="admin-game-stats" class="space-y-4">
+                            <p class="text-gray-400 text-center">Memuat data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Management Section -->
+            <div id="admin-users-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen User</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="py-3 px-4 text-left">Nama</th>
+                                    <th class="py-3 px-4 text-left">Email</th>
+                                    <th class="py-3 px-4 text-left">Bergabung</th>
+                                    <th class="py-3 px-4 text-left">Total Order</th>
+                                    <th class="py-3 px-4 text-left">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Management Section -->
+            <div id="admin-orders-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen Order</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="py-3 px-4 text-left">ID Order</th>
+                                    <th class="py-3 px-4 text-left">User</th>
+                                    <th class="py-3 px-4 text-left">Game</th>
+                                    <th class="py-3 px-4 text-left">Paket</th>
+                                    <th class="py-3 px-4 text-left">Harga</th>
+                                    <th class="py-3 px-4 text-left">Status</th>
+                                    <th class="py-3 px-4 text-left">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-list">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packages Management Section -->
+            <div id="admin-packages-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen Paket Layanan</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="admin-card rounded-2xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">Genshin Impact</h4>
+                        <div id="admin-genshin-packages">
+                            <!-- Packages will be populated here -->
+                        </div>
+                    </div>
+                    <div class="admin-card rounded-2xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">Mobile Legends</h4>
+                        <div id="admin-ml-packages">
+                            <!-- Packages will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="admin-settings-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Pengaturan Sistem</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="text-white block mb-2">Nama Website</label>
+                            <input type="text" id="admin-site-name" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="DIURNAL">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">Email Admin</label>
+                            <input type="email" id="admin-email" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="admin@diurnal.com">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">WhatsApp Contact</label>
+                            <input type="text" id="admin-whatsapp" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="+6281254737900">
+                        </div>
+                        <button class="btn-primary px-6 py-3 rounded-lg font-bold">
+                            <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                        </button>
                     </div>
                 </div>
             </div>
@@ -879,8 +1103,8 @@
 
     <!-- JavaScript -->
     <script>
-        // Auth System
-        class AuthSystem {
+        // Enhanced Auth System
+        class EnhancedAuthSystem {
             constructor() {
                 this.currentUser = null;
                 this.users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
@@ -888,6 +1112,23 @@
             }
 
             init() {
+                // Create default admin user if not exists
+                if (!this.users.find(user => user.role === 'admin')) {
+                    const adminUser = {
+                        id: 'admin',
+                        firstName: 'Admin',
+                        lastName: 'DIURNAL',
+                        username: 'admin',
+                        email: 'admin@diurnal.com',
+                        password: 'admin123',
+                        role: 'admin',
+                        createdAt: new Date().toISOString(),
+                        orders: []
+                    };
+                    this.users.push(adminUser);
+                    this.saveToStorage();
+                }
+
                 const savedUser = localStorage.getItem('diurnal_current_user');
                 if (savedUser) {
                     this.currentUser = JSON.parse(savedUser);
@@ -896,6 +1137,15 @@
             }
 
             register(userData) {
+                // Validation
+                if (!userData.firstName || !userData.lastName || !userData.username || !userData.email || !userData.password) {
+                    return { success: false, message: 'Semua field harus diisi!' };
+                }
+
+                if (userData.password.length < 6) {
+                    return { success: false, message: 'Password minimal 6 karakter!' };
+                }
+
                 if (this.users.find(user => user.email === userData.email)) {
                     return { success: false, message: 'Email sudah terdaftar!' };
                 }
@@ -907,13 +1157,14 @@
                 const newUser = {
                     id: Date.now().toString(),
                     ...userData,
+                    role: 'user',
                     createdAt: new Date().toISOString(),
                     orders: [],
                     balance: 0
                 };
 
                 this.users.push(newUser);
-                localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                this.saveToStorage();
 
                 return { success: true, message: 'Registrasi berhasil!' };
             }
@@ -943,6 +1194,8 @@
                 const userAvatar = document.getElementById('user-avatar');
                 const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
                 const mobileUserMenu = document.getElementById('mobile-user-menu');
+                const adminLink = document.getElementById('admin-link');
+                const mobileAdminLink = document.getElementById('mobile-admin-link');
 
                 if (this.currentUser) {
                     if (authButtons) authButtons.classList.add('hidden');
@@ -951,16 +1204,76 @@
                     if (userAvatar) userAvatar.textContent = this.currentUser.username.charAt(0).toUpperCase();
                     if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
                     if (mobileUserMenu) mobileUserMenu.classList.remove('hidden');
+
+                    // Show admin link if user is admin
+                    if (this.currentUser.role === 'admin') {
+                        if (adminLink) adminLink.classList.remove('hidden');
+                        if (mobileAdminLink) mobileAdminLink.classList.remove('hidden');
+                    } else {
+                        if (adminLink) adminLink.classList.add('hidden');
+                        if (mobileAdminLink) mobileAdminLink.classList.add('hidden');
+                    }
                 } else {
                     if (authButtons) authButtons.classList.remove('hidden');
                     if (userMenu) userMenu.classList.add('hidden');
                     if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
                     if (mobileUserMenu) mobileUserMenu.classList.add('hidden');
+                    if (adminLink) adminLink.classList.add('hidden');
+                    if (mobileAdminLink) mobileAdminLink.classList.add('hidden');
                 }
             }
 
             getCurrentUser() {
                 return this.currentUser;
+            }
+
+            getAllUsers() {
+                return this.users.filter(user => user.role !== 'admin');
+            }
+
+            getAllOrders() {
+                const allOrders = [];
+                this.users.forEach(user => {
+                    if (user.orders) {
+                        user.orders.forEach(order => {
+                            allOrders.push({
+                                ...order,
+                                userEmail: user.email,
+                                userName: user.username
+                            });
+                        });
+                    }
+                });
+                return allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            getAdminStats() {
+                const users = this.getAllUsers();
+                const orders = this.getAllOrders();
+                
+                const totalRevenue = orders.reduce((sum, order) => {
+                    return sum + parseInt(order.price?.replace(/\D/g, '') || 0);
+                }, 0);
+
+                const pendingOrders = orders.filter(order => order.status === 'pending').length;
+
+                const gameStats = {};
+                orders.forEach(order => {
+                    if (order.game) {
+                        if (!gameStats[order.game]) {
+                            gameStats[order.game] = 0;
+                        }
+                        gameStats[order.game]++;
+                    }
+                });
+
+                return {
+                    totalUsers: users.length,
+                    totalOrders: orders.length,
+                    totalRevenue,
+                    pendingOrders,
+                    gameStats
+                };
             }
 
             addOrder(orderData) {
@@ -973,24 +1286,51 @@
                     createdAt: new Date().toISOString()
                 };
 
+                if (!this.currentUser.orders) {
+                    this.currentUser.orders = [];
+                }
+
                 this.currentUser.orders.unshift(order);
                 
                 const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
                 if (userIndex !== -1) {
                     this.users[userIndex] = this.currentUser;
-                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                    this.saveToStorage();
                     localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
                 }
 
                 return true;
             }
 
+            updateOrderStatus(orderId, status) {
+                for (let user of this.users) {
+                    if (user.orders) {
+                        const orderIndex = user.orders.findIndex(order => order.id === orderId);
+                        if (orderIndex !== -1) {
+                            user.orders[orderIndex].status = status;
+                            this.saveToStorage();
+                            
+                            // Update current user if needed
+                            if (this.currentUser && this.currentUser.id === user.id) {
+                                localStorage.setItem('diurnal_current_user', JSON.stringify(user));
+                            }
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
             getUserOrders() {
-                return this.currentUser ? this.currentUser.orders : [];
+                return this.currentUser ? (this.currentUser.orders || []) : [];
+            }
+
+            saveToStorage() {
+                localStorage.setItem('diurnal_users', JSON.stringify(this.users));
             }
         }
 
-        const auth = new AuthSystem();
+        const auth = new EnhancedAuthSystem();
 
         // Modal Functions
         function showAuthModal() {
@@ -999,9 +1339,19 @@
 
         function closeAuthModal() {
             document.getElementById('auth-modal').classList.add('hidden');
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            // Clear messages
+            document.getElementById('login-message').classList.add('hidden');
+            document.getElementById('register-message').classList.add('hidden');
         }
 
         function showProfile() {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                return;
+            }
             loadProfileData();
             document.getElementById('profile-modal').classList.remove('hidden');
             closeMobileMenu();
@@ -1027,6 +1377,195 @@
             }
         }
 
+        // Admin Panel Functions
+        function showAdminPanel() {
+            if (!auth.getCurrentUser() || auth.getCurrentUser().role !== 'admin') {
+                alert('Hanya admin yang dapat mengakses panel ini!');
+                return;
+            }
+            document.getElementById('admin-panel').classList.remove('hidden');
+            loadAdminDashboard();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.add('hidden');
+        }
+
+        function showAdminSection(section) {
+            // Hide all sections
+            document.getElementById('admin-dashboard-section').classList.add('hidden');
+            document.getElementById('admin-users-section').classList.add('hidden');
+            document.getElementById('admin-orders-section').classList.add('hidden');
+            document.getElementById('admin-packages-section').classList.add('hidden');
+            document.getElementById('admin-settings-section').classList.add('hidden');
+            
+            // Show selected section
+            document.getElementById(`admin-${section}-section`).classList.remove('hidden');
+            
+            // Load section data if needed
+            if (section === 'users') {
+                loadAdminUsers();
+            } else if (section === 'orders') {
+                loadAdminOrders();
+            } else if (section === 'packages') {
+                loadAdminPackages();
+            }
+        }
+
+        function loadAdminDashboard() {
+            const stats = auth.getAdminStats();
+            const recentOrders = auth.getAllOrders().slice(0, 5);
+            
+            document.getElementById('admin-total-users').textContent = stats.totalUsers;
+            document.getElementById('admin-total-orders').textContent = stats.totalOrders;
+            document.getElementById('admin-revenue').textContent = `Rp ${stats.totalRevenue.toLocaleString()}`;
+            document.getElementById('admin-pending-orders').textContent = stats.pendingOrders;
+            
+            // Load recent orders
+            const recentOrdersContainer = document.getElementById('admin-recent-orders');
+            if (recentOrders.length === 0) {
+                recentOrdersContainer.innerHTML = '<p class="text-gray-400 text-center">Belum ada order</p>';
+            } else {
+                recentOrdersContainer.innerHTML = recentOrders.map(order => `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <div>
+                            <p class="text-white font-semibold">${order.packageName || 'Paket Joki'}</p>
+                            <p class="text-gray-400 text-sm">${order.userName} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
+                        </div>
+                        <span class="order-status-${order.status} font-semibold">${getStatusText(order.status)}</span>
+                    </div>
+                `).join('');
+            }
+            
+            // Load game stats
+            const gameStatsContainer = document.getElementById('admin-game-stats');
+            if (Object.keys(stats.gameStats).length === 0) {
+                gameStatsContainer.innerHTML = '<p class="text-gray-400 text-center">Belum ada data game</p>';
+            } else {
+                gameStatsContainer.innerHTML = Object.entries(stats.gameStats).map(([game, count]) => `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">${game}</span>
+                        <span class="text-accent font-bold">${count} order</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadAdminUsers() {
+            const users = auth.getAllUsers();
+            const usersList = document.getElementById('admin-users-list');
+            
+            if (users.length === 0) {
+                usersList.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">Belum ada user terdaftar</td></tr>';
+                return;
+            }
+            
+            usersList.innerHTML = users.map(user => `
+                <tr class="border-b border-gray-700">
+                    <td class="py-3 px-4">${user.firstName} ${user.lastName}</td>
+                    <td class="py-3 px-4">${user.email}</td>
+                    <td class="py-3 px-4">${new Date(user.createdAt).toLocaleDateString('id-ID')}</td>
+                    <td class="py-3 px-4">${user.orders ? user.orders.length : 0}</td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewUserDetails('${user.id}')" class="text-blue-400 hover:text-blue-300 mr-2">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="deleteUser('${user.id}')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadAdminOrders() {
+            const orders = auth.getAllOrders();
+            const ordersList = document.getElementById('admin-orders-list');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-400">Belum ada order</td></tr>';
+                return;
+            }
+            
+            ordersList.innerHTML = orders.map(order => `
+                <tr class="border-b border-gray-700">
+                    <td class="py-3 px-4">${order.id.slice(-6)}</td>
+                    <td class="py-3 px-4">${order.userName}</td>
+                    <td class="py-3 px-4">${order.game || '-'}</td>
+                    <td class="py-3 px-4">${order.packageName || 'Paket Joki'}</td>
+                    <td class="py-3 px-4">${order.price || 'Rp 0'}</td>
+                    <td class="py-3 px-4">
+                        <select onchange="updateOrderStatus('${order.id}', this.value)" class="bg-gray-800 text-white rounded px-2 py-1 order-status-${order.status}">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewOrderDetails('${order.id}')" class="text-blue-400 hover:text-blue-300">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadAdminPackages() {
+            // This would typically load from a database
+            // For now, we'll use static data
+            document.getElementById('admin-genshin-packages').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Daily Commission (30 hari)</span>
+                        <span class="text-accent font-bold">Rp 150.000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Spiral Abyss 9-12</span>
+                        <span class="text-accent font-bold">Rp 100.000</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('admin-ml-packages').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Epic ke Legend</span>
+                        <span class="text-accent font-bold">Rp 200.000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Legend ke Mythic</span>
+                        <span class="text-accent font-bold">Rp 350.000</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateOrderStatus(orderId, status) {
+            if (auth.updateOrderStatus(orderId, status)) {
+                // Reload the orders list to reflect changes
+                loadAdminOrders();
+                loadAdminDashboard();
+            }
+        }
+
+        function viewUserDetails(userId) {
+            alert(`View details for user: ${userId}`);
+            // In a real application, this would show a modal with user details
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+                alert(`Delete user: ${userId}`);
+                // In a real application, this would delete the user from the system
+            }
+        }
+
+        function viewOrderDetails(orderId) {
+            alert(`View details for order: ${orderId}`);
+            // In a real application, this would show a modal with order details
+        }
+
         // Load profile data
         function loadProfileData() {
             const user = auth.getCurrentUser();
@@ -1046,7 +1585,8 @@
             document.getElementById('processing-orders').textContent = orders.filter(o => o.status === 'processing').length;
             
             const totalSpent = orders.reduce((sum, order) => {
-                return sum + parseInt(order.price.replace(/\D/g, '') || 0);
+                const price = order.price ? parseInt(order.price.replace(/\D/g, '')) || 0 : 0;
+                return sum + price;
             }, 0);
             document.getElementById('total-spent').textContent = `Rp ${totalSpent.toLocaleString()}`;
         }
@@ -1072,7 +1612,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
-                        <span class="text-gray-400 text-sm">ID: ${order.id.slice(-6)}</span>
+                        <span class="text-gray-400 text-sm">ID: ${order.id ? order.id.slice(-6) : 'N/A'}</span>
                     </div>
                 </div>
             `).join('');
@@ -1091,7 +1631,9 @@
         function logout() {
             auth.logout();
             closeProfileModal();
+            closeAdminPanel();
             closeMobileMenu();
+            closeAuthModal();
         }
 
         // Mobile Menu Functions
@@ -1133,6 +1675,7 @@
             if (result.success) {
                 setTimeout(() => {
                     closeAuthModal();
+                    messageDiv.classList.add('hidden');
                 }, 1000);
             }
         });
@@ -1166,9 +1709,11 @@
 
             if (result.success) {
                 setTimeout(() => {
+                    // Auto switch to login tab and prefill email
                     document.getElementById('login-tab').click();
                     document.getElementById('login-email').value = userData.email;
                     document.getElementById('login-password').value = userData.password;
+                    messageDiv.classList.add('hidden');
                 }, 1500);
             }
         });
@@ -1204,6 +1749,10 @@
 
         document.getElementById('profile-modal').addEventListener('click', function(e) {
             if (e.target === this) closeProfileModal();
+        });
+
+        document.getElementById('admin-panel').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminPanel();
         });
 
         // Simple animation on scroll

@@ -88,6 +88,60 @@
             width: 100%;
         }
 
+        /* Auth Styles */
+        .auth-card {
+            background: rgba(179, 137, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #ffd600;
+            box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.2);
+        }
+
+        .profile-card {
+            background: rgba(179, 137, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.2);
+        }
+
+        .order-status-pending { color: #f59e0b; }
+        .order-status-processing { color: #3b82f6; }
+        .order-status-completed { color: #10b981; }
+        .order-status-cancelled { color: #ef4444; }
+
+        /* Admin Panel Styles */
+        .admin-sidebar {
+            background: rgba(11, 11, 11, 0.95);
+            border-right: 1px solid rgba(179, 137, 0, 0.3);
+        }
+
+        .admin-content {
+            background: rgba(11, 11, 11, 0.9);
+        }
+
+        .admin-card {
+            background: rgba(179, 137, 0, 0.1);
+            border: 1px solid rgba(255, 214, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 214, 0, 0.3);
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(179, 137, 0, 0.2), rgba(11, 11, 11, 0.8));
+            border: 1px solid rgba(255, 214, 0, 0.3);
+        }
+
         /* Mobile Menu Styles */
         .mobile-menu {
             transform: translateX(100%);
@@ -130,7 +184,46 @@
             </div>
 
             <div class="flex items-center space-x-4">
-                <button class="btn-primary px-6 py-2 rounded-full font-semibold">Order Sekarang</button>
+                <!-- Admin Panel Link (tampil jika admin) -->
+                <div id="admin-link" class="hidden">
+                    <a href="#admin" onclick="showAdminPanel()" class="text-white hover:text-accent transition">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </a>
+                </div>
+
+                <!-- User Menu (tampil jika login) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-black font-bold text-sm" id="user-avatar">
+                            U
+                        </div>
+                        <span class="text-white" id="user-name">User</span>
+                    </div>
+                    <div class="relative group">
+                        <button class="text-white hover:text-accent transition">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="absolute right-0 top-10 w-48 bg-gray-900 rounded-lg shadow-lg py-2 hidden group-hover:block">
+                            <button onclick="showProfile()" class="w-full text-left px-4 py-2 text-white hover:bg-gray-800">
+                                <i class="fas fa-user mr-2"></i> Profil Saya
+                            </button>
+                            <button onclick="showOrders()" class="w-full text-left px-4 py-2 text-white hover:bg-gray-800">
+                                <i class="fas fa-history mr-2"></i> Riwayat Order
+                            </button>
+                            <hr class="my-2 border-gray-700">
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-800">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Buttons (tampil jika belum login) -->
+                <div id="auth-buttons" class="flex items-center space-x-3">
+                    <button onclick="showAuthModal()" class="text-white hover:text-accent transition">Login</button>
+                    <button onclick="showAuthModal()" class="btn-primary px-4 py-2 rounded-full text-sm">Daftar</button>
+                </div>
+
                 <button id="menu-toggle" class="text-white md:hidden">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
@@ -158,7 +251,32 @@
             <a href="index.html#harga" class="text-white text-lg font-medium hover:text-accent transition">Harga</a>
             <a href="index.html#testimoni" class="text-white text-lg font-medium hover:text-accent transition">Testimoni</a>
             <a href="index.html#kontak" class="text-white text-lg font-medium hover:text-accent transition">Kontak</a>
-            <button class="btn-primary w-full py-3 rounded-full font-bold mt-4">Order Sekarang</button>
+            
+            <!-- Mobile Admin Link -->
+            <div id="mobile-admin-link" class="hidden">
+                <a href="#admin" onclick="showAdminPanel()" class="text-white text-lg font-medium hover:text-accent transition text-left">
+                    <i class="fas fa-cog mr-2"></i> Admin Panel
+                </a>
+            </div>
+            
+            <!-- Mobile Auth Buttons -->
+            <div id="mobile-auth-buttons" class="flex flex-col space-y-3">
+                <button onclick="showAuthModal()" class="text-white text-lg font-medium hover:text-accent transition text-left">Login</button>
+                <button onclick="showAuthModal()" class="btn-primary w-full py-3 rounded-full font-bold">Daftar</button>
+            </div>
+
+            <!-- Mobile User Menu -->
+            <div id="mobile-user-menu" class="hidden">
+                <button onclick="showProfile()" class="text-white text-lg font-medium hover:text-accent transition text-left w-full text-left">
+                    <i class="fas fa-user mr-2"></i> Profil Saya
+                </button>
+                <button onclick="showOrders()" class="text-white text-lg font-medium hover:text-accent transition text-left w-full text-left mt-3">
+                    <i class="fas fa-history mr-2"></i> Riwayat Order
+                </button>
+                <button onclick="logout()" class="text-red-400 text-lg font-medium hover:text-red-300 transition text-left w-full text-left mt-3">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
+            </div>
         </div>
         
         <div class="absolute bottom-6 left-6 right-6">
@@ -179,6 +297,439 @@
     <!-- Menu Overlay -->
     <div id="menu-overlay" class="menu-overlay fixed inset-0 bg-black bg-opacity-70 z-30 md:hidden"></div>
 
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="auth-card rounded-2xl p-8 max-w-md w-full">
+            <!-- Close Button -->
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <!-- Tab Navigation -->
+            <div class="flex mb-8 border-b border-gray-700">
+                <button id="login-tab" class="flex-1 py-3 text-center font-semibold text-accent border-b-2 border-accent">
+                    Login
+                </button>
+                <button id="register-tab" class="flex-1 py-3 text-center font-semibold text-gray-400 border-b-2 border-transparent">
+                    Daftar
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Masuk ke Akun Anda</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="text-white block mb-2">Email</label>
+                        <input type="email" id="login-email" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Password</label>
+                        <input type="password" id="login-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                    </button>
+                </form>
+                <div id="login-message" class="mt-4 text-center hidden"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="hidden">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Buat Akun Baru</h2>
+                <form id="registerForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-white block mb-2">Nama Depan</label>
+                            <input type="text" id="first-name" required 
+                                   class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="John">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">Nama Belakang</label>
+                            <input type="text" id="last-name" required 
+                                   class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Username</label>
+                        <input type="text" id="reg-username" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="johndoe">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Email</label>
+                        <input type="email" id="reg-email" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Password</label>
+                        <input type="password" id="reg-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label class="text-white block mb-2">Konfirmasi Password</label>
+                        <input type="password" id="reg-confirm-password" required 
+                               class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">
+                        <i class="fas fa-user-plus mr-2"></i> Daftar
+                    </button>
+                </form>
+                <div id="register-message" class="mt-4 text-center hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Pesan Paket Joki</h3>
+                <button onclick="closeOrderModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="order-form" class="space-y-4">
+                <!-- Package Info -->
+                <div id="order-package-info" class="bg-gray-800 p-4 rounded-lg border-l-4 border-accent">
+                    <h4 class="text-accent font-bold text-lg" id="selected-package-name">-</h4>
+                    <p class="text-white font-semibold" id="selected-package-price">-</p>
+                    <p class="text-gray-400 text-sm mt-1" id="selected-package-game">-</p>
+                </div>
+                
+                <!-- User ID -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-user mr-2"></i>ID Game
+                    </label>
+                    <input type="text" id="order-userid" required 
+                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                           placeholder="Contoh: 123456789">
+                </div>
+                
+                <!-- Server/Region -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-globe mr-2"></i>Server/Region
+                    </label>
+                    <select id="order-server" required 
+                            class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                        <option value="">Pilih Server</option>
+                        <option value="Original Server">Original Server</option>
+                        <option value="Advanced Server">Advanced Server</option>
+                        <option value="Local Server">Local Server</option>
+                    </select>
+                </div>
+                
+                <!-- Password Game -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-lock mr-2"></i>Password Akun Game
+                    </label>
+                    <input type="password" id="order-password" required 
+                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                           placeholder="Masukkan password game Anda">
+                    <p class="text-gray-400 text-xs mt-2">
+                        <i class="fas fa-shield-alt mr-1"></i>Password akan dihapus dari sistem kami setelah order selesai
+                    </p>
+                </div>
+                
+                <!-- Additional Notes -->
+                <div>
+                    <label class="text-white block mb-2 font-semibold">
+                        <i class="fas fa-sticky-note mr-2"></i>Catatan Khusus
+                    </label>
+                    <textarea id="order-notes" 
+                              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
+                              rows="3" 
+                              placeholder="Request hero favorit, role yang diinginkan, target win rate, dll..."></textarea>
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start space-x-3 p-3 bg-gray-800 rounded-lg">
+                    <input type="checkbox" id="order-terms" required class="mt-1 text-accent">
+                    <label for="order-terms" class="text-gray-300 text-sm">
+                        Saya setuju dengan <a href="#" class="text-accent hover:underline">syarat dan ketentuan</a> serta memahami bahwa password saya akan dihapus setelah order selesai
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn-primary w-full py-4 rounded-full font-bold text-lg">
+                    <i class="fas fa-paper-plane mr-2"></i> Konfirmasi Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Profil Saya</h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Sidebar Menu -->
+                <div class="profile-card rounded-2xl p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-accent flex items-center justify-center text-black font-bold text-2xl" id="profile-avatar">
+                            U
+                        </div>
+                        <h2 id="profile-name" class="text-xl font-bold text-white">User Name</h2>
+                        <p id="profile-email" class="text-gray-400 text-sm">user@email.com</p>
+                    </div>
+
+                    <nav class="space-y-2">
+                        <button onclick="showProfileSection('info')" class="w-full text-left px-4 py-3 bg-accent text-black rounded-lg font-semibold">
+                            <i class="fas fa-user mr-2"></i> Profil
+                        </button>
+                        <button onclick="showProfileSection('orders')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                            <i class="fas fa-history mr-2"></i> Riwayat Order
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Profile Info -->
+                    <div id="profile-info-section">
+                        <h3 class="text-2xl font-bold text-white mb-6">Informasi Profil</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="text-gray-400 block mb-2">Nama Lengkap</label>
+                                <p id="profile-fullname" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Username</label>
+                                <p id="profile-username" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Email</label>
+                                <p id="profile-email-display" class="text-white font-semibold">-</p>
+                            </div>
+                            <div>
+                                <label class="text-gray-400 block mb-2">Member Since</label>
+                                <p id="profile-joined" class="text-white font-semibold">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-accent mb-2" id="total-orders">0</div>
+                                <div class="text-gray-400 text-sm">Total Order</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-green-400 mb-2" id="completed-orders">0</div>
+                                <div class="text-gray-400 text-sm">Selesai</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-400 mb-2" id="processing-orders">0</div>
+                                <div class="text-gray-400 text-sm">Diproses</div>
+                            </div>
+                            <div class="profile-card rounded-2xl p-4 text-center">
+                                <div class="text-2xl font-bold text-accent mb-2" id="total-spent">Rp 0</div>
+                                <div class="text-gray-400 text-sm">Total Belanja</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Section -->
+                    <div id="profile-orders-section" class="hidden">
+                        <h3 class="text-2xl font-bold text-white mb-6">Riwayat Order</h3>
+                        <div id="orders-list" class="space-y-4">
+                            <p class="text-gray-400 text-center">Belum ada order</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex">
+        <!-- Sidebar -->
+        <div class="admin-sidebar w-64 p-6 overflow-y-auto">
+            <div class="flex items-center mb-8">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-darkYellow to-accent flex items-center justify-center mr-3">
+                    <i class="fas fa-crown text-black"></i>
+                </div>
+                <span class="text-xl font-bold text-white">DIUR<span class="text-accent">NAL</span></span>
+            </div>
+
+            <nav class="space-y-2">
+                <button onclick="showAdminSection('dashboard')" class="w-full text-left px-4 py-3 bg-accent text-black rounded-lg font-semibold">
+                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                </button>
+                <button onclick="showAdminSection('users')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-users mr-2"></i> Manajemen User
+                </button>
+                <button onclick="showAdminSection('orders')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-shopping-cart mr-2"></i> Manajemen Order
+                </button>
+                <button onclick="showAdminSection('packages')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-box mr-2"></i> Paket Layanan
+                </button>
+                <button onclick="showAdminSection('settings')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                </button>
+            </nav>
+
+            <div class="mt-8 pt-8 border-t border-gray-700">
+                <button onclick="closeAdminPanel()" class="w-full text-left px-4 py-3 text-red-400 hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-times mr-2"></i> Tutup Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="admin-content flex-1 p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Admin Panel - Mobile Legends</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-400">Selamat datang, <span id="admin-name" class="text-accent font-semibold">Admin</span></span>
+                    <button onclick="logout()" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="admin-dashboard-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-accent mb-2" id="admin-total-users">0</div>
+                        <div class="text-gray-400">Total User</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-green-400 mb-2" id="admin-total-orders">0</div>
+                        <div class="text-gray-400">Total Order</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-blue-400 mb-2" id="admin-revenue">Rp 0</div>
+                        <div class="text-gray-400">Total Pendapatan</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-yellow-400 mb-2" id="admin-pending-orders">0</div>
+                        <div class="text-gray-400">Order Pending</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="admin-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Order Terbaru</h3>
+                        <div id="admin-recent-orders" class="space-y-4">
+                            <p class="text-gray-400 text-center">Belum ada order</p>
+                        </div>
+                    </div>
+
+                    <div class="admin-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Statistik Game</h3>
+                        <div id="admin-game-stats" class="space-y-4">
+                            <p class="text-gray-400 text-center">Memuat data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Management Section -->
+            <div id="admin-users-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen User</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="py-3 px-4 text-left">Nama</th>
+                                    <th class="py-3 px-4 text-left">Email</th>
+                                    <th class="py-3 px-4 text-left">Bergabung</th>
+                                    <th class="py-3 px-4 text-left">Total Order</th>
+                                    <th class="py-3 px-4 text-left">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Management Section -->
+            <div id="admin-orders-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen Order</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="py-3 px-4 text-left">ID Order</th>
+                                    <th class="py-3 px-4 text-left">User</th>
+                                    <th class="py-3 px-4 text-left">Game</th>
+                                    <th class="py-3 px-4 text-left">Paket</th>
+                                    <th class="py-3 px-4 text-left">Harga</th>
+                                    <th class="py-3 px-4 text-left">Status</th>
+                                    <th class="py-3 px-4 text-left">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-list">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packages Management Section -->
+            <div id="admin-packages-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Manajemen Paket Layanan</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="admin-card rounded-2xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">Mobile Legends</h4>
+                        <div id="admin-ml-packages">
+                            <!-- Packages will be populated here -->
+                        </div>
+                    </div>
+                    <div class="admin-card rounded-2xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4">Paket Lainnya</h4>
+                        <div id="admin-other-packages">
+                            <!-- Other packages will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="admin-settings-section" class="hidden">
+                <h3 class="text-2xl font-bold text-white mb-6">Pengaturan Sistem</h3>
+                <div class="admin-card rounded-2xl p-6">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="text-white block mb-2">Nama Website</label>
+                            <input type="text" id="admin-site-name" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="DIURNAL">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">Email Admin</label>
+                            <input type="email" id="admin-email" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="admin@diurnal.com">
+                        </div>
+                        <div>
+                            <label class="text-white block mb-2">WhatsApp Contact</label>
+                            <input type="text" id="admin-whatsapp" class="form-input w-full px-4 py-3 rounded-lg text-white focus:outline-none" value="+6281254737900">
+                        </div>
+                        <button class="btn-primary px-6 py-3 rounded-lg font-bold">
+                            <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Hero Section -->
     <section class="hero-bg min-h-screen flex items-center pt-20 pb-16 relative overflow-hidden">
         <div class="absolute left-0 top-1/4 w-1/3 h-1/2 bg-red-600 opacity-20 rounded-full blur-3xl"></div>
@@ -194,6 +745,14 @@
             <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
                 Naik rank dengan cepat dan aman! Joki Mobile Legends profesional siap membawa Anda ke tier yang lebih tinggi.
             </p>
+            <div class="flex flex-col md:flex-row justify-center gap-4 items-center">
+                <div class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                    <i class="fas fa-users mr-2"></i> <span id="active-users">0</span> Players Active
+                </div>
+                <div class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                    <i class="fas fa-shopping-cart mr-2"></i> <span id="today-orders">0</span> Orders Today
+                </div>
+            </div>
         </div>
     </section>
 
@@ -233,7 +792,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Epic → Legend', 'Rp 200.000', 'Mobile Legends')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 2 -->
@@ -264,7 +826,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Legend → Mythic', 'Rp 350.000', 'Mobile Legends')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 3 -->
@@ -294,7 +859,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Mythic → Glory', 'Rp 500.000', 'Mobile Legends')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
             </div>
 
@@ -327,7 +895,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Win Rate Boosting (10%)', 'Rp 50.000', 'Mobile Legends')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
 
                 <!-- Package 5 -->
@@ -357,7 +928,10 @@
                         </li>
                     </ul>
                     
-                    <button class="btn-primary w-full py-3 rounded-full font-bold">Pilih Paket Ini</button>
+                    <button onclick="orderPackage('Classic Boosting (per match)', 'Rp 25.000', 'Mobile Legends')" 
+                            class="btn-primary w-full py-3 rounded-full font-bold">
+                        Pilih Paket Ini
+                    </button>
                 </div>
             </div>
         </div>
@@ -405,7 +979,7 @@
             <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Siap Naik <span class="text-accent">Rank</span> Sekarang?</h2>
             <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-10">Jangan stuck di rank yang sama! Biarkan pro player kami yang membawa Anda ke tier lebih tinggi.</p>
             <div class="flex flex-col md:flex-row justify-center gap-6">
-                <button class="btn-primary px-8 py-4 rounded-full text-lg font-bold">
+                <button onclick="showAuthModal()" class="btn-primary px-8 py-4 rounded-full text-lg font-bold">
                     Order Sekarang <i class="ml-2 fas fa-arrow-right"></i>
                 </button>
                 <a href="index.html" class="border-2 border-accent text-accent px-8 py-4 rounded-full text-lg font-bold hover:bg-accent hover:text-black transition">
@@ -485,27 +1059,906 @@
         </div>
     </footer>
 
+    <!-- JavaScript -->
     <script>
-        // Mobile Menu Toggle
+        // Enhanced Auth System dengan Activity Tracking untuk Mobile Legends
+        class EnhancedAuthSystem {
+            constructor() {
+                this.currentUser = null;
+                this.users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+                this.init();
+            }
+
+            init() {
+                const savedUser = localStorage.getItem('diurnal_current_user');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    this.updateUI();
+                    this.trackActivity('page_view', 'Mobile Legends Page');
+                }
+                this.updateLiveStats();
+                this.setupAuthEventListeners();
+            }
+
+            setupAuthEventListeners() {
+                // Login Form Handler
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleLogin();
+                    });
+                }
+
+                // Register Form Handler
+                const registerForm = document.getElementById('registerForm');
+                if (registerForm) {
+                    registerForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleRegister();
+                    });
+                }
+
+                // Tab Switching
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                
+                if (loginTab && registerTab) {
+                    loginTab.addEventListener('click', () => this.switchToLogin());
+                    registerTab.addEventListener('click', () => this.switchToRegister());
+                }
+            }
+
+            handleLogin() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const messageDiv = document.getElementById('login-message');
+
+                const result = this.login(email, password);
+                
+                messageDiv.textContent = result.message;
+                messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                messageDiv.classList.remove('hidden');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        closeAuthModal();
+                        messageDiv.classList.add('hidden');
+                    }, 1000);
+                }
+            }
+
+            handleRegister() {
+                const userData = {
+                    firstName: document.getElementById('first-name').value,
+                    lastName: document.getElementById('last-name').value,
+                    username: document.getElementById('reg-username').value,
+                    email: document.getElementById('reg-email').value,
+                    password: document.getElementById('reg-password').value
+                };
+
+                const confirmPassword = document.getElementById('reg-confirm-password').value;
+                const messageDiv = document.getElementById('register-message');
+
+                if (userData.password !== confirmPassword) {
+                    messageDiv.textContent = 'Password tidak cocok!';
+                    messageDiv.className = 'mt-4 text-center text-red-400';
+                    messageDiv.classList.remove('hidden');
+                    return;
+                }
+
+                const result = this.register(userData);
+                
+                messageDiv.textContent = result.message;
+                messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                messageDiv.classList.remove('hidden');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        closeAuthModal();
+                        messageDiv.classList.add('hidden');
+                    }, 1000);
+                }
+            }
+
+            switchToLogin() {
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+
+                loginTab.classList.add('text-accent', 'border-accent');
+                loginTab.classList.remove('text-gray-400', 'border-transparent');
+                registerTab.classList.add('text-gray-400', 'border-transparent');
+                registerTab.classList.remove('text-accent', 'border-accent');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            }
+
+            switchToRegister() {
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+
+                registerTab.classList.add('text-accent', 'border-accent');
+                registerTab.classList.remove('text-gray-400', 'border-transparent');
+                loginTab.classList.add('text-gray-400', 'border-transparent');
+                loginTab.classList.remove('text-accent', 'border-accent');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+
+            async register(userData) {
+                // Validasi
+                const errors = this.validateUserData(userData);
+                if (errors.length > 0) {
+                    return { success: false, message: errors.join(', ') };
+                }
+
+                if (this.users.find(user => user.email === userData.email)) {
+                    return { success: false, message: 'Email sudah terdaftar!' };
+                }
+
+                if (this.users.find(user => user.username === userData.username)) {
+                    return { success: false, message: 'Username sudah dipakai!' };
+                }
+
+                const hashedPassword = this.simpleHash(userData.password);
+
+                const newUser = {
+                    id: Date.now().toString(),
+                    ...userData,
+                    password: hashedPassword,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    loginCount: 1,
+                    orders: [],
+                    balance: 0,
+                    statistics: {
+                        totalOrders: 0,
+                        completedOrders: 0,
+                        totalSpent: 0
+                    }
+                };
+
+                this.users.push(newUser);
+                this.saveToStorage();
+                
+                // Auto login setelah register
+                this.currentUser = newUser;
+                localStorage.setItem('diurnal_current_user', JSON.stringify(newUser));
+                this.updateUI();
+                
+                // Track registration activity
+                this.trackActivity('register', 'New user registration', newUser.email);
+                
+                return { success: true, message: 'Registrasi berhasil!' };
+            }
+
+            login(email, password) {
+                const hashedPassword = this.simpleHash(password);
+                const user = this.users.find(u => u.email === email && u.password === hashedPassword);
+                
+                if (user) {
+                    user.lastLogin = new Date().toISOString();
+                    user.loginCount = (user.loginCount || 0) + 1;
+                    this.currentUser = user;
+                    localStorage.setItem('diurnal_current_user', JSON.stringify(user));
+                    this.saveToStorage();
+                    this.updateUI();
+                    
+                    // Track login activity
+                    this.trackActivity('login', 'User logged in', user.email);
+                    
+                    return { success: true, message: 'Login berhasil!' };
+                }
+                return { success: false, message: 'Email atau password salah!' };
+            }
+
+            logout() {
+                this.trackActivity('logout', 'User logged out');
+                this.currentUser = null;
+                localStorage.removeItem('diurnal_current_user');
+                this.updateUI();
+            }
+
+            trackActivity(action, details, email = null) {
+                const activity = {
+                    timestamp: new Date().toISOString(),
+                    username: this.currentUser ? this.currentUser.username : 'Guest',
+                    email: email || (this.currentUser ? this.currentUser.email : 'guest'),
+                    action: action,
+                    details: details,
+                    page: 'Mobile Legends',
+                    ip: this.getClientIP()
+                };
+
+                const activityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+                activityLogs.push(activity);
+                
+                // Keep only last 500 logs
+                if (activityLogs.length > 500) {
+                    activityLogs.splice(0, 100);
+                }
+                
+                localStorage.setItem('diurnal_activity_logs', JSON.stringify(activityLogs));
+            }
+
+            getClientIP() {
+                return 'user_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            simpleHash(password) {
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(36);
+            }
+
+            validateUserData(userData) {
+                const errors = [];
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (!emailRegex.test(userData.email)) {
+                    errors.push('Format email tidak valid');
+                }
+                if (userData.password.length < 6) {
+                    errors.push('Password minimal 6 karakter');
+                }
+                if (userData.username.length < 3) {
+                    errors.push('Username minimal 3 karakter');
+                }
+                if (!userData.firstName || userData.firstName.trim() === '') {
+                    errors.push('Nama depan harus diisi');
+                }
+                if (!userData.lastName || userData.lastName.trim() === '') {
+                    errors.push('Nama belakang harus diisi');
+                }
+                
+                return errors;
+            }
+
+            saveToStorage() {
+                try {
+                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                } catch (error) {
+                    console.error('Error saving to storage:', error);
+                }
+            }
+
+            updateUI() {
+                const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+                const userName = document.getElementById('user-name');
+                const userAvatar = document.getElementById('user-avatar');
+                const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+                const adminLink = document.getElementById('admin-link');
+                const mobileAdminLink = document.getElementById('mobile-admin-link');
+
+                if (this.currentUser) {
+                    if (authButtons) authButtons.classList.add('hidden');
+                    if (userMenu) userMenu.classList.remove('hidden');
+                    if (userName) userName.textContent = this.currentUser.username;
+                    if (userAvatar) userAvatar.textContent = this.currentUser.username.charAt(0).toUpperCase();
+                    if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
+                    if (mobileUserMenu) mobileUserMenu.classList.remove('hidden');
+
+                    // Show admin link if user is admin
+                    if (this.currentUser.role === 'admin') {
+                        if (adminLink) adminLink.classList.remove('hidden');
+                        if (mobileAdminLink) mobileAdminLink.classList.remove('hidden');
+                    } else {
+                        if (adminLink) adminLink.classList.add('hidden');
+                        if (mobileAdminLink) mobileAdminLink.classList.add('hidden');
+                    }
+                } else {
+                    if (authButtons) authButtons.classList.remove('hidden');
+                    if (userMenu) userMenu.classList.add('hidden');
+                    if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
+                    if (mobileUserMenu) mobileUserMenu.classList.add('hidden');
+                    if (adminLink) adminLink.classList.add('hidden');
+                    if (mobileAdminLink) mobileAdminLink.classList.add('hidden');
+                }
+            }
+
+            getCurrentUser() {
+                return this.currentUser;
+            }
+
+            getAllUsers() {
+                return this.users.filter(user => user.role !== 'admin');
+            }
+
+            getAllOrders() {
+                const allOrders = [];
+                this.users.forEach(user => {
+                    if (user.orders) {
+                        user.orders.forEach(order => {
+                            allOrders.push({
+                                ...order,
+                                userEmail: user.email,
+                                userName: user.username
+                            });
+                        });
+                    }
+                });
+                return allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            getAdminStats() {
+                const users = this.getAllUsers();
+                const orders = this.getAllOrders();
+                
+                const totalRevenue = orders.reduce((sum, order) => {
+                    return sum + parseInt(order.price?.replace(/\D/g, '') || 0);
+                }, 0);
+
+                const pendingOrders = orders.filter(order => order.status === 'pending').length;
+
+                const gameStats = {};
+                orders.forEach(order => {
+                    if (order.game) {
+                        if (!gameStats[order.game]) {
+                            gameStats[order.game] = 0;
+                        }
+                        gameStats[order.game]++;
+                    }
+                });
+
+                return {
+                    totalUsers: users.length,
+                    totalOrders: orders.length,
+                    totalRevenue,
+                    pendingOrders,
+                    gameStats
+                };
+            }
+
+            addOrder(orderData) {
+                if (!this.currentUser) return false;
+
+                const order = {
+                    id: Date.now().toString(),
+                    ...orderData,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                if (!this.currentUser.orders) {
+                    this.currentUser.orders = [];
+                }
+
+                this.currentUser.orders.unshift(order);
+                
+                const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
+                if (userIndex !== -1) {
+                    this.users[userIndex] = this.currentUser;
+                    this.saveToStorage();
+                    localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
+                }
+
+                // Track order activity
+                this.trackActivity('order', `New order: ${orderData.packageName} - ${orderData.price}`);
+
+                return true;
+            }
+
+            updateOrderStatus(orderId, status) {
+                for (let user of this.users) {
+                    if (user.orders) {
+                        const orderIndex = user.orders.findIndex(order => order.id === orderId);
+                        if (orderIndex !== -1) {
+                            user.orders[orderIndex].status = status;
+                            this.saveToStorage();
+                            
+                            // Update current user if needed
+                            if (this.currentUser && this.currentUser.id === user.id) {
+                                localStorage.setItem('diurnal_current_user', JSON.stringify(user));
+                            }
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            getUserOrders() {
+                return this.currentUser ? (this.currentUser.orders || []) : [];
+            }
+
+            updateLiveStats() {
+                const users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+                const activityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+                
+                // Calculate active users (logged in last 24 hours)
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const activeUsers = users.filter(user => 
+                    user.lastLogin && new Date(user.lastLogin) > twentyFourHoursAgo
+                ).length;
+
+                // Calculate today's orders for Mobile Legends
+                const today = new Date().toDateString();
+                const todayOrders = users.reduce((count, user) => {
+                    if (user.orders) {
+                        return count + user.orders.filter(order => 
+                            order.game === 'Mobile Legends' && 
+                            new Date(order.createdAt).toDateString() === today
+                        ).length;
+                    }
+                    return count;
+                }, 0);
+
+                // Update live stats display
+                const activeUsersEl = document.getElementById('active-users');
+                const todayOrdersEl = document.getElementById('today-orders');
+                
+                if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+                if (todayOrdersEl) todayOrdersEl.textContent = todayOrders;
+
+                // Update every 30 seconds
+                setTimeout(() => this.updateLiveStats(), 30000);
+            }
+        }
+
+        const auth = new EnhancedAuthSystem();
+
+        // Modal Functions
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            auth.trackActivity('auth_modal_open', 'Authentication modal opened');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            // Clear messages
+            document.getElementById('login-message').classList.add('hidden');
+            document.getElementById('register-message').classList.add('hidden');
+        }
+
+        function showProfile() {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                return;
+            }
+            loadProfileData();
+            document.getElementById('profile-modal').classList.remove('hidden');
+            closeMobileMenu();
+            auth.trackActivity('profile_view', 'User viewed profile');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function showOrders() {
+            showProfileSection('orders');
+            auth.trackActivity('orders_view', 'User viewed order history');
+        }
+
+        function showProfileSection(section) {
+            document.getElementById('profile-info-section').classList.add('hidden');
+            document.getElementById('profile-orders-section').classList.add('hidden');
+            
+            if (section === 'info') {
+                document.getElementById('profile-info-section').classList.remove('hidden');
+            } else if (section === 'orders') {
+                document.getElementById('profile-orders-section').classList.remove('hidden');
+                loadOrdersList();
+            }
+        }
+
+        // Admin Panel Functions
+        function showAdminPanel() {
+            if (!auth.getCurrentUser() || auth.getCurrentUser().role !== 'admin') {
+                alert('Hanya admin yang dapat mengakses panel ini!');
+                return;
+            }
+            document.getElementById('admin-panel').classList.remove('hidden');
+            loadAdminDashboard();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.add('hidden');
+        }
+
+        function showAdminSection(section) {
+            // Hide all sections
+            document.getElementById('admin-dashboard-section').classList.add('hidden');
+            document.getElementById('admin-users-section').classList.add('hidden');
+            document.getElementById('admin-orders-section').classList.add('hidden');
+            document.getElementById('admin-packages-section').classList.add('hidden');
+            document.getElementById('admin-settings-section').classList.add('hidden');
+            
+            // Show selected section
+            document.getElementById(`admin-${section}-section`).classList.remove('hidden');
+            
+            // Load section data if needed
+            if (section === 'users') {
+                loadAdminUsers();
+            } else if (section === 'orders') {
+                loadAdminOrders();
+            } else if (section === 'packages') {
+                loadAdminPackages();
+            }
+        }
+
+        function loadAdminDashboard() {
+            const stats = auth.getAdminStats();
+            const recentOrders = auth.getAllOrders().slice(0, 5);
+            
+            document.getElementById('admin-total-users').textContent = stats.totalUsers;
+            document.getElementById('admin-total-orders').textContent = stats.totalOrders;
+            document.getElementById('admin-revenue').textContent = `Rp ${stats.totalRevenue.toLocaleString()}`;
+            document.getElementById('admin-pending-orders').textContent = stats.pendingOrders;
+            
+            // Load recent orders
+            const recentOrdersContainer = document.getElementById('admin-recent-orders');
+            if (recentOrders.length === 0) {
+                recentOrdersContainer.innerHTML = '<p class="text-gray-400 text-center">Belum ada order</p>';
+            } else {
+                recentOrdersContainer.innerHTML = recentOrders.map(order => `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <div>
+                            <p class="text-white font-semibold">${order.packageName || 'Paket Joki'}</p>
+                            <p class="text-gray-400 text-sm">${order.userName} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
+                        </div>
+                        <span class="order-status-${order.status} font-semibold">${getStatusText(order.status)}</span>
+                    </div>
+                `).join('');
+            }
+            
+            // Load game stats
+            const gameStatsContainer = document.getElementById('admin-game-stats');
+            if (Object.keys(stats.gameStats).length === 0) {
+                gameStatsContainer.innerHTML = '<p class="text-gray-400 text-center">Belum ada data game</p>';
+            } else {
+                gameStatsContainer.innerHTML = Object.entries(stats.gameStats).map(([game, count]) => `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">${game}</span>
+                        <span class="text-accent font-bold">${count} order</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadAdminUsers() {
+            const users = auth.getAllUsers();
+            const usersList = document.getElementById('admin-users-list');
+            
+            if (users.length === 0) {
+                usersList.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">Belum ada user terdaftar</td></tr>';
+                return;
+            }
+            
+            usersList.innerHTML = users.map(user => `
+                <tr class="border-b border-gray-700">
+                    <td class="py-3 px-4">${user.firstName} ${user.lastName}</td>
+                    <td class="py-3 px-4">${user.email}</td>
+                    <td class="py-3 px-4">${new Date(user.createdAt).toLocaleDateString('id-ID')}</td>
+                    <td class="py-3 px-4">${user.orders ? user.orders.length : 0}</td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewUserDetails('${user.id}')" class="text-blue-400 hover:text-blue-300 mr-2">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="deleteUser('${user.id}')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadAdminOrders() {
+            const orders = auth.getAllOrders();
+            const ordersList = document.getElementById('admin-orders-list');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-400">Belum ada order</td></tr>';
+                return;
+            }
+            
+            ordersList.innerHTML = orders.map(order => `
+                <tr class="border-b border-gray-700">
+                    <td class="py-3 px-4">${order.id.slice(-6)}</td>
+                    <td class="py-3 px-4">${order.userName}</td>
+                    <td class="py-3 px-4">${order.game || '-'}</td>
+                    <td class="py-3 px-4">${order.packageName || 'Paket Joki'}</td>
+                    <td class="py-3 px-4">${order.price || 'Rp 0'}</td>
+                    <td class="py-3 px-4">
+                        <select onchange="updateOrderStatus('${order.id}', this.value)" class="bg-gray-800 text-white rounded px-2 py-1 order-status-${order.status}">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewOrderDetails('${order.id}')" class="text-blue-400 hover:text-blue-300">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadAdminPackages() {
+            // Mobile Legends packages
+            document.getElementById('admin-ml-packages').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Epic → Legend</span>
+                        <span class="text-accent font-bold">Rp 200.000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Legend → Mythic</span>
+                        <span class="text-accent font-bold">Rp 350.000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Mythic → Glory</span>
+                        <span class="text-accent font-bold">Rp 500.000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Win Rate Boosting</span>
+                        <span class="text-accent font-bold">Rp 50.000/10%</span>
+                    </div>
+                </div>
+            `;
+            
+            // Other packages
+            document.getElementById('admin-other-packages').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-300">Classic Boosting</span>
+                        <span class="text-accent font-bold">Rp 25.000/match</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateOrderStatus(orderId, status) {
+            if (auth.updateOrderStatus(orderId, status)) {
+                // Reload the orders list to reflect changes
+                loadAdminOrders();
+                loadAdminDashboard();
+            }
+        }
+
+        function viewUserDetails(userId) {
+            alert(`View details for user: ${userId}`);
+            // In a real application, this would show a modal with user details
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+                alert(`Delete user: ${userId}`);
+                // In a real application, this would delete the user from the system
+            }
+        }
+
+        function viewOrderDetails(orderId) {
+            alert(`View details for order: ${orderId}`);
+            // In a real application, this would show a modal with order details
+        }
+
+        // Order Functions
+        function orderPackage(packageName, price, game) {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                auth.trackActivity('order_attempt', `Attempted to order ${packageName} without login`);
+                return;
+            }
+            
+            // Show order modal
+            document.getElementById('selected-package-name').textContent = packageName;
+            document.getElementById('selected-package-price').textContent = price;
+            document.getElementById('selected-package-game').textContent = game;
+            document.getElementById('order-modal').classList.remove('hidden');
+            
+            auth.trackActivity('order_modal_open', `Order modal opened for ${packageName}`);
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+        }
+
+        // Load profile data
+        function loadProfileData() {
+            const user = auth.getCurrentUser();
+            if (!user) return;
+
+            document.getElementById('profile-avatar').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('profile-name').textContent = user.username;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('profile-fullname').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('profile-username').textContent = user.username;
+            document.getElementById('profile-email-display').textContent = user.email;
+            document.getElementById('profile-joined').textContent = new Date(user.createdAt).toLocaleDateString('id-ID');
+
+            const orders = auth.getUserOrders();
+            document.getElementById('total-orders').textContent = orders.length;
+            document.getElementById('completed-orders').textContent = orders.filter(o => o.status === 'completed').length;
+            document.getElementById('processing-orders').textContent = orders.filter(o => o.status === 'processing').length;
+            
+            const totalSpent = orders.reduce((sum, order) => {
+                const price = order.price ? parseInt(order.price.replace(/\D/g, '')) || 0 : 0;
+                return sum + price;
+            }, 0);
+            document.getElementById('total-spent').textContent = `Rp ${totalSpent.toLocaleString()}`;
+        }
+
+        // Load orders list
+        function loadOrdersList() {
+            const orders = auth.getUserOrders();
+            const ordersList = document.getElementById('orders-list');
+
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p class="text-gray-400 text-center">Belum ada order</p>';
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="profile-card rounded-2xl p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="text-white font-semibold">${order.packageName || 'Paket Joki'}</h4>
+                            <p class="text-gray-400 text-sm">${order.game || 'Game'} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
+                        </div>
+                        <span class="order-status-${order.status} font-semibold">${getStatusText(order.status)}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
+                        <span class="text-gray-400 text-sm">ID: ${order.id ? order.id.slice(-6) : 'N/A'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Menunggu',
+                'processing': 'Diproses',
+                'completed': 'Selesai',
+                'cancelled': 'Dibatalkan'
+            };
+            return statusMap[status] || status;
+        }
+
+        function logout() {
+            auth.logout();
+            closeProfileModal();
+            closeAdminPanel();
+            closeMobileMenu();
+            closeAuthModal();
+        }
+
+        // Mobile Menu Functions
         const menuToggle = document.getElementById('menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const menuClose = document.getElementById('menu-close');
         const menuOverlay = document.getElementById('menu-overlay');
-        
-        function toggleMenu() {
+
+        function toggleMobileMenu() {
             mobileMenu.classList.toggle('active');
             menuOverlay.classList.toggle('active');
             document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+            
+            if (mobileMenu.classList.contains('active')) {
+                auth.trackActivity('mobile_menu_open', 'Mobile menu opened');
+            }
         }
-        
-        menuToggle.addEventListener('click', toggleMenu);
-        menuClose.addEventListener('click', toggleMenu);
-        menuOverlay.addEventListener('click', toggleMenu);
-        
-        // Close menu when clicking on menu links
-        const menuLinks = document.querySelectorAll('#mobile-menu a');
-        menuLinks.forEach(link => {
-            link.addEventListener('click', toggleMenu);
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', toggleMobileMenu);
+        if (menuClose) menuClose.addEventListener('click', closeMobileMenu);
+        if (menuOverlay) menuOverlay.addEventListener('click', closeMobileMenu);
+
+        // Order Form Handler
+        const orderForm = document.getElementById('order-form');
+        if (orderForm) {
+            orderForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const orderData = {
+                    packageName: document.getElementById('selected-package-name').textContent,
+                    price: document.getElementById('selected-package-price').textContent,
+                    game: document.getElementById('selected-package-game').textContent,
+                    userId: document.getElementById('order-userid').value,
+                    server: document.getElementById('order-server').value,
+                    notes: document.getElementById('order-notes').value,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Add to user orders
+                if (auth.addOrder(orderData)) {
+                    // Show success message
+                    alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
+                    
+                    // Send to WhatsApp
+                    sendOrderToWhatsApp(orderData);
+                    
+                    // Close modal and reset form
+                    closeOrderModal();
+                    document.getElementById('order-form').reset();
+                    
+                    // Update live stats
+                    auth.updateLiveStats();
+                }
+            });
+        }
+
+        // WhatsApp integration
+        function sendOrderToWhatsApp(orderData) {
+            const user = auth.getCurrentUser();
+            const message = `Halo DIURNAL! Saya ingin order joki Mobile Legends:\n\n` +
+                           `📦 *PAKET:* ${orderData.packageName}\n` +
+                           `💰 *HARGA:* ${orderData.price}\n` +
+                           `🎮 *GAME:* ${orderData.game}\n` +
+                           `👤 *ID GAME:* ${orderData.userId}\n` +
+                           `🌍 *SERVER:* ${orderData.server}\n` +
+                           `📝 *CATATAN:* ${orderData.notes || '-'}\n\n` +
+                           `*DATA PELANGGAN:*\n` +
+                           `Nama: ${user.firstName} ${user.lastName}\n` +
+                           `Username: ${user.username}\n` +
+                           `Email: ${user.email}\n\n` +
+                           `Saya sudah melakukan order via website.`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappURL = `https://wa.me/6281254737900?text=${encodedMessage}`;
+            
+            window.open(whatsappURL, '_blank');
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('auth-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAuthModal();
+        });
+
+        document.getElementById('profile-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeProfileModal();
+        });
+
+        document.getElementById('order-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeOrderModal();
+        });
+
+        document.getElementById('admin-panel').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminPanel();
+        });
+
+        // Track page interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track package views
+            const packageButtons = document.querySelectorAll('button[onclick*="orderPackage"]');
+            packageButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const packageName = this.closest('.package-card').querySelector('h3').textContent;
+                    auth.trackActivity('package_view', `Viewed package: ${packageName}`);
+                });
+            });
+
+            // Track CTA clicks
+            const ctaButtons = document.querySelectorAll('.btn-primary');
+            ctaButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.textContent.includes('Order Sekarang')) {
+                        auth.trackActivity('cta_click', 'Clicked Order Sekarang button');
+                    }
+                });
+            });
         });
     </script>
 </body>

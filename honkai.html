@@ -249,7 +249,12 @@
 
     <!-- Auth Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
-        <div class="auth-card rounded-2xl p-8 max-w-md w-full">
+        <div class="auth-card rounded-2xl p-8 max-w-md w-full relative">
+            <!-- Close Button -->
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
             <!-- Tab Navigation -->
             <div class="flex mb-8 border-b border-gray-700">
                 <button id="login-tab" class="flex-1 py-3 text-center font-semibold text-accent border-b-2 border-accent">
@@ -844,6 +849,116 @@
                     this.trackActivity('page_view', 'Honkai Star Rail Page');
                 }
                 this.updateLiveStats();
+                this.setupAuthEventListeners(); // PERBAIKAN: Setup event listeners
+            }
+
+            setupAuthEventListeners() {
+                // Login Form Handler
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleLogin();
+                    });
+                }
+
+                // Register Form Handler
+                const registerForm = document.getElementById('registerForm');
+                if (registerForm) {
+                    registerForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleRegister();
+                    });
+                }
+
+                // Tab Switching
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                
+                if (loginTab && registerTab) {
+                    loginTab.addEventListener('click', () => this.switchToLogin());
+                    registerTab.addEventListener('click', () => this.switchToRegister());
+                }
+            }
+
+            handleLogin() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const messageDiv = document.getElementById('login-message');
+
+                const result = this.login(email, password);
+                
+                messageDiv.textContent = result.message;
+                messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                messageDiv.classList.remove('hidden');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        closeAuthModal();
+                        messageDiv.classList.add('hidden');
+                    }, 1000);
+                }
+            }
+
+            handleRegister() {
+                const userData = {
+                    firstName: document.getElementById('first-name').value,
+                    lastName: document.getElementById('last-name').value,
+                    username: document.getElementById('reg-username').value,
+                    email: document.getElementById('reg-email').value,
+                    password: document.getElementById('reg-password').value
+                };
+
+                const confirmPassword = document.getElementById('reg-confirm-password').value;
+                const messageDiv = document.getElementById('register-message');
+
+                if (userData.password !== confirmPassword) {
+                    messageDiv.textContent = 'Password tidak cocok!';
+                    messageDiv.className = 'mt-4 text-center text-red-400';
+                    messageDiv.classList.remove('hidden');
+                    return;
+                }
+
+                const result = this.register(userData);
+                
+                messageDiv.textContent = result.message;
+                messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
+                messageDiv.classList.remove('hidden');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        closeAuthModal();
+                        messageDiv.classList.add('hidden');
+                    }, 1000);
+                }
+            }
+
+            switchToLogin() {
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+
+                loginTab.classList.add('text-accent', 'border-accent');
+                loginTab.classList.remove('text-gray-400', 'border-transparent');
+                registerTab.classList.add('text-gray-400', 'border-transparent');
+                registerTab.classList.remove('text-accent', 'border-accent');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            }
+
+            switchToRegister() {
+                const loginTab = document.getElementById('login-tab');
+                const registerTab = document.getElementById('register-tab');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+
+                registerTab.classList.add('text-accent', 'border-accent');
+                registerTab.classList.remove('text-gray-400', 'border-transparent');
+                loginTab.classList.add('text-gray-400', 'border-transparent');
+                loginTab.classList.remove('text-accent', 'border-accent');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
             }
 
             async register(userData) {
@@ -882,6 +997,11 @@
                 this.users.push(newUser);
                 this.saveToStorage();
                 
+                // PERBAIKAN: Auto login setelah register
+                this.currentUser = newUser;
+                localStorage.setItem('diurnal_current_user', JSON.stringify(newUser));
+                this.updateUI();
+                
                 // Track registration activity
                 this.trackActivity('register', 'New user registration', newUser.email);
                 
@@ -908,6 +1028,14 @@
                 return { success: false, message: 'Email atau password salah!' };
             }
 
+            // PERBAIKAN: Tambah method logout yang hilang
+            logout() {
+                this.trackActivity('logout', 'User logged out');
+                this.currentUser = null;
+                localStorage.removeItem('diurnal_current_user');
+                this.updateUI();
+            }
+
             trackActivity(action, details, email = null) {
                 const activity = {
                     timestamp: new Date().toISOString(),
@@ -931,7 +1059,6 @@
             }
 
             getClientIP() {
-                // Simplified IP detection - in real app, use proper IP detection
                 return 'user_' + Math.random().toString(36).substr(2, 9);
             }
 
@@ -957,6 +1084,13 @@
                 }
                 if (userData.username.length < 3) {
                     errors.push('Username minimal 3 karakter');
+                }
+                // PERBAIKAN: Tambah validasi untuk nama
+                if (!userData.firstName || userData.firstName.trim() === '') {
+                    errors.push('Nama depan harus diisi');
+                }
+                if (!userData.lastName || userData.lastName.trim() === '') {
+                    errors.push('Nama belakang harus diisi');
                 }
                 
                 return errors;
@@ -1007,12 +1141,16 @@
                     createdAt: new Date().toISOString()
                 };
 
+                if (!this.currentUser.orders) {
+                    this.currentUser.orders = [];
+                }
+
                 this.currentUser.orders.unshift(order);
                 
                 const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
                 if (userIndex !== -1) {
                     this.users[userIndex] = this.currentUser;
-                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                    this.saveToStorage();
                     localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
                 }
 
@@ -1023,7 +1161,7 @@
             }
 
             getUserOrders() {
-                return this.currentUser ? this.currentUser.orders : [];
+                return this.currentUser ? (this.currentUser.orders || []) : [];
             }
 
             updateLiveStats() {
@@ -1049,8 +1187,11 @@
                 }, 0);
 
                 // Update live stats display
-                document.getElementById('active-users').textContent = activeUsers;
-                document.getElementById('today-orders').textContent = todayOrders;
+                const activeUsersEl = document.getElementById('active-users');
+                const todayOrdersEl = document.getElementById('today-orders');
+                
+                if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+                if (todayOrdersEl) todayOrdersEl.textContent = todayOrders;
 
                 // Update every 30 seconds
                 setTimeout(() => this.updateLiveStats(), 30000);
@@ -1067,9 +1208,19 @@
 
         function closeAuthModal() {
             document.getElementById('auth-modal').classList.add('hidden');
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            // Clear messages
+            document.getElementById('login-message').classList.add('hidden');
+            document.getElementById('register-message').classList.add('hidden');
         }
 
         function showProfile() {
+            if (!auth.getCurrentUser()) {
+                showAuthModal();
+                return;
+            }
             loadProfileData();
             document.getElementById('profile-modal').classList.remove('hidden');
             closeMobileMenu();
@@ -1137,7 +1288,8 @@
             document.getElementById('processing-orders').textContent = orders.filter(o => o.status === 'processing').length;
             
             const totalSpent = orders.reduce((sum, order) => {
-                return sum + parseInt(order.price.replace(/\D/g, '') || 0);
+                const price = order.price ? parseInt(order.price.replace(/\D/g, '')) || 0 : 0;
+                return sum + price;
             }, 0);
             document.getElementById('total-spent').textContent = `Rp ${totalSpent.toLocaleString()}`;
         }
@@ -1160,15 +1312,15 @@
                             <p class="text-gray-400 text-sm">${order.game || 'Game'} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
                         </div>
                         <span class="px-3 py-1 rounded-full text-xs ${
-                            order.status === 'completed' ? 'status-completed' :
-                            order.status === 'processing' ? 'status-processing' : 'status-pending'
+                            order.status === 'completed' ? 'bg-green-500 text-white' :
+                            order.status === 'processing' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
                         }">
                             ${getStatusText(order.status)}
                         </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
-                        <span class="text-gray-400 text-sm">ID: ${order.id.slice(-6)}</span>
+                        <span class="text-gray-400 text-sm">ID: ${order.id ? order.id.slice(-6) : 'N/A'}</span>
                     </div>
                 </div>
             `).join('');
@@ -1185,10 +1337,10 @@
         }
 
         function logout() {
-            auth.trackActivity('logout', 'User logged out');
             auth.logout();
             closeProfileModal();
             closeMobileMenu();
+            closeAuthModal();
         }
 
         // Mobile Menu Functions
@@ -1213,98 +1365,44 @@
             document.body.style.overflow = '';
         }
 
-        menuToggle.addEventListener('click', toggleMobileMenu);
-        menuClose.addEventListener('click', closeMobileMenu);
-        menuOverlay.addEventListener('click', closeMobileMenu);
-
-        // Auth Form Handlers
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const messageDiv = document.getElementById('login-message');
-
-            const result = auth.login(email, password);
-            
-            messageDiv.textContent = result.message;
-            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
-            messageDiv.classList.remove('hidden');
-
-            if (result.success) {
-                setTimeout(() => {
-                    closeAuthModal();
-                }, 1000);
-            }
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userData = {
-                firstName: document.getElementById('first-name').value,
-                lastName: document.getElementById('last-name').value,
-                username: document.getElementById('reg-username').value,
-                email: document.getElementById('reg-email').value,
-                password: document.getElementById('reg-password').value
-            };
-
-            const confirmPassword = document.getElementById('reg-confirm-password').value;
-            const messageDiv = document.getElementById('register-message');
-
-            if (userData.password !== confirmPassword) {
-                messageDiv.textContent = 'Password tidak cocok!';
-                messageDiv.className = 'mt-4 text-center text-red-400';
-                messageDiv.classList.remove('hidden');
-                return;
-            }
-
-            const result = auth.register(userData);
-            
-            messageDiv.textContent = result.message;
-            messageDiv.className = `mt-4 text-center ${result.success ? 'text-green-400' : 'text-red-400'}`;
-            messageDiv.classList.remove('hidden');
-
-            if (result.success) {
-                setTimeout(() => {
-                    document.getElementById('login-tab').click();
-                    document.getElementById('login-email').value = userData.email;
-                    document.getElementById('login-password').value = userData.password;
-                }, 1500);
-            }
-        });
+        if (menuToggle) menuToggle.addEventListener('click', toggleMobileMenu);
+        if (menuClose) menuClose.addEventListener('click', closeMobileMenu);
+        if (menuOverlay) menuOverlay.addEventListener('click', closeMobileMenu);
 
         // Order Form Handler
-        document.getElementById('order-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const orderData = {
-                packageName: document.getElementById('selected-package-name').textContent,
-                price: document.getElementById('selected-package-price').textContent,
-                game: document.getElementById('selected-package-game').textContent,
-                userId: document.getElementById('order-userid').value,
-                server: document.getElementById('order-server').value,
-                notes: document.getElementById('order-notes').value,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-            
-            // Add to user orders
-            if (auth.addOrder(orderData)) {
-                // Show success message
-                alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
+        const orderForm = document.getElementById('order-form');
+        if (orderForm) {
+            orderForm.addEventListener('submit', function(e) {
+                e.preventDefault();
                 
-                // Send to WhatsApp
-                sendOrderToWhatsApp(orderData);
+                const orderData = {
+                    packageName: document.getElementById('selected-package-name').textContent,
+                    price: document.getElementById('selected-package-price').textContent,
+                    game: document.getElementById('selected-package-game').textContent,
+                    userId: document.getElementById('order-userid').value,
+                    server: document.getElementById('order-server').value,
+                    notes: document.getElementById('order-notes').value,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
                 
-                // Close modal and reset form
-                closeOrderModal();
-                document.getElementById('order-form').reset();
-                
-                // Update live stats
-                auth.updateLiveStats();
-            }
-        });
+                // Add to user orders
+                if (auth.addOrder(orderData)) {
+                    // Show success message
+                    alert('Order berhasil! Silakan lanjutkan pembayaran via WhatsApp.');
+                    
+                    // Send to WhatsApp
+                    sendOrderToWhatsApp(orderData);
+                    
+                    // Close modal and reset form
+                    closeOrderModal();
+                    document.getElementById('order-form').reset();
+                    
+                    // Update live stats
+                    auth.updateLiveStats();
+                }
+            });
+        }
 
         // WhatsApp integration
         function sendOrderToWhatsApp(orderData) {
@@ -1327,30 +1425,6 @@
             
             window.open(whatsappURL, '_blank');
         }
-
-        // Tab Switching for Auth Modal
-        const loginTab = document.getElementById('login-tab');
-        const registerTab = document.getElementById('register-tab');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('text-accent', 'border-accent');
-            loginTab.classList.remove('text-gray-400', 'border-transparent');
-            registerTab.classList.add('text-gray-400', 'border-transparent');
-            registerTab.classList.remove('text-accent', 'border-accent');
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
-        });
-
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('text-accent', 'border-accent');
-            registerTab.classList.remove('text-gray-400', 'border-transparent');
-            loginTab.classList.add('text-gray-400', 'border-transparent');
-            loginTab.classList.remove('text-accent', 'border-accent');
-            registerForm.classList.remove('hidden');
-            loginForm.classList.add('hidden');
-        });
 
         // Close modals when clicking outside
         document.getElementById('auth-modal').addEventListener('click', function(e) {

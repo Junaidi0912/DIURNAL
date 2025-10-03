@@ -360,9 +360,14 @@
                     <label class="text-white block mb-2 font-semibold">
                         <i class="fas fa-globe mr-2"></i>Server/Region
                     </label>
-                    <input type="text" id="order-server" required 
-                           class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none" 
-                           placeholder="Contoh: Asia, Europe, Indonesia, dll">
+                    <select id="order-server" required 
+                            class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                        <option value="">Pilih Server</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Europe">Europe</option>
+                        <option value="America">America</option>
+                        <option value="TW/HK/MO">TW/HK/MO</option>
+                    </select>
                 </div>
                 
                 <!-- Password Game -->
@@ -508,6 +513,15 @@
             <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
                 Tingkatkan pengalaman Genshin Impact Anda dengan jasa joki profesional. Dari daily commission hingga spiral abyss, kami siap membantu!
             </p>
+            <!-- ✅ TAMBAHIN: Live Statistics -->
+            <div class="flex flex-col md:flex-row justify-center gap-4 items-center">
+                <div class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                    <i class="fas fa-users mr-2"></i> <span id="active-users">0</span> Players Active
+                </div>
+                <div class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                    <i class="fas fa-shopping-cart mr-2"></i> <span id="today-orders">0</span> Orders Today
+                </div>
+            </div>
         </div>
     </section>
 
@@ -816,8 +830,8 @@
 
     <!-- JavaScript -->
     <script>
-        // Auth System
-        class AuthSystem {
+        // Enhanced Auth System dengan Activity Tracking untuk Genshin Impact
+        class EnhancedAuthSystem {
             constructor() {
                 this.currentUser = null;
                 this.users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
@@ -829,10 +843,18 @@
                 if (savedUser) {
                     this.currentUser = JSON.parse(savedUser);
                     this.updateUI();
+                    this.trackActivity('page_view', 'Genshin Impact Page');
                 }
+                this.updateLiveStats();
             }
 
-            register(userData) {
+            async register(userData) {
+                // Validasi
+                const errors = this.validateUserData(userData);
+                if (errors.length > 0) {
+                    return { success: false, message: errors.join(', ') };
+                }
+
                 if (this.users.find(user => user.email === userData.email)) {
                     return { success: false, message: 'Email sudah terdaftar!' };
                 }
@@ -841,36 +863,113 @@
                     return { success: false, message: 'Username sudah dipakai!' };
                 }
 
+                const hashedPassword = this.simpleHash(userData.password);
+
                 const newUser = {
                     id: Date.now().toString(),
                     ...userData,
+                    password: hashedPassword,
                     createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    loginCount: 1,
                     orders: [],
-                    balance: 0
+                    balance: 0,
+                    statistics: {
+                        totalOrders: 0,
+                        completedOrders: 0,
+                        totalSpent: 0
+                    }
                 };
 
                 this.users.push(newUser);
-                localStorage.setItem('diurnal_users', JSON.stringify(this.users));
-
+                this.saveToStorage();
+                
+                // Track registration activity
+                this.trackActivity('register', 'New user registration', newUser.email);
+                
                 return { success: true, message: 'Registrasi berhasil!' };
             }
 
             login(email, password) {
-                const user = this.users.find(u => u.email === email && u.password === password);
+                const hashedPassword = this.simpleHash(password);
+                const user = this.users.find(u => u.email === email && u.password === hashedPassword);
+                
                 if (user) {
+                    user.lastLogin = new Date().toISOString();
+                    user.loginCount = (user.loginCount || 0) + 1;
                     this.currentUser = user;
                     localStorage.setItem('diurnal_current_user', JSON.stringify(user));
+                    this.saveToStorage();
                     this.updateUI();
+                    
+                    // Track login activity
+                    this.trackActivity('login', 'User logged in', user.email);
+                    
                     return { success: true, message: 'Login berhasil!' };
                 }
                 return { success: false, message: 'Email atau password salah!' };
             }
 
-            logout() {
-                this.currentUser = null;
-                localStorage.removeItem('diurnal_current_user');
-                this.updateUI();
-                return { success: true, message: 'Logout berhasil!' };
+            trackActivity(action, details, email = null) {
+                const activity = {
+                    timestamp: new Date().toISOString(),
+                    username: this.currentUser ? this.currentUser.username : 'Guest',
+                    email: email || (this.currentUser ? this.currentUser.email : 'guest'),
+                    action: action,
+                    details: details,
+                    page: 'Genshin Impact',
+                    ip: this.getClientIP()
+                };
+
+                const activityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+                activityLogs.push(activity);
+                
+                // Keep only last 500 logs
+                if (activityLogs.length > 500) {
+                    activityLogs.splice(0, 100);
+                }
+                
+                localStorage.setItem('diurnal_activity_logs', JSON.stringify(activityLogs));
+            }
+
+            getClientIP() {
+                // Simplified IP detection
+                return 'user_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            simpleHash(password) {
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(36);
+            }
+
+            validateUserData(userData) {
+                const errors = [];
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (!emailRegex.test(userData.email)) {
+                    errors.push('Format email tidak valid');
+                }
+                if (userData.password.length < 6) {
+                    errors.push('Password minimal 6 karakter');
+                }
+                if (userData.username.length < 3) {
+                    errors.push('Username minimal 3 karakter');
+                }
+                
+                return errors;
+            }
+
+            saveToStorage() {
+                try {
+                    localStorage.setItem('diurnal_users', JSON.stringify(this.users));
+                } catch (error) {
+                    console.error('Error saving to storage:', error);
+                }
             }
 
             updateUI() {
@@ -919,19 +1018,53 @@
                     localStorage.setItem('diurnal_current_user', JSON.stringify(this.currentUser));
                 }
 
+                // Track order activity
+                this.trackActivity('order', `New order: ${orderData.packageName} - ${orderData.price}`);
+
                 return true;
             }
 
             getUserOrders() {
                 return this.currentUser ? this.currentUser.orders : [];
             }
+
+            updateLiveStats() {
+                const users = JSON.parse(localStorage.getItem('diurnal_users')) || [];
+                const activityLogs = JSON.parse(localStorage.getItem('diurnal_activity_logs')) || [];
+                
+                // Calculate active users (logged in last 24 hours)
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const activeUsers = users.filter(user => 
+                    user.lastLogin && new Date(user.lastLogin) > twentyFourHoursAgo
+                ).length;
+
+                // Calculate today's orders for Genshin Impact
+                const today = new Date().toDateString();
+                const todayOrders = users.reduce((count, user) => {
+                    if (user.orders) {
+                        return count + user.orders.filter(order => 
+                            order.game === 'Genshin Impact' && 
+                            new Date(order.createdAt).toDateString() === today
+                        ).length;
+                    }
+                    return count;
+                }, 0);
+
+                // Update live stats display
+                document.getElementById('active-users').textContent = activeUsers;
+                document.getElementById('today-orders').textContent = todayOrders;
+
+                // Update every 30 seconds
+                setTimeout(() => this.updateLiveStats(), 30000);
+            }
         }
 
-        const auth = new AuthSystem();
+        const auth = new EnhancedAuthSystem();
 
         // Modal Functions
         function showAuthModal() {
             document.getElementById('auth-modal').classList.remove('hidden');
+            auth.trackActivity('auth_modal_open', 'Authentication modal opened');
         }
 
         function closeAuthModal() {
@@ -942,6 +1075,7 @@
             loadProfileData();
             document.getElementById('profile-modal').classList.remove('hidden');
             closeMobileMenu();
+            auth.trackActivity('profile_view', 'User viewed profile');
         }
 
         function closeProfileModal() {
@@ -950,6 +1084,7 @@
 
         function showOrders() {
             showProfileSection('orders');
+            auth.trackActivity('orders_view', 'User viewed order history');
         }
 
         function showProfileSection(section) {
@@ -968,6 +1103,7 @@
         function orderPackage(packageName, price, game) {
             if (!auth.getCurrentUser()) {
                 showAuthModal();
+                auth.trackActivity('order_attempt', `Attempted to order ${packageName} without login`);
                 return;
             }
             
@@ -976,6 +1112,8 @@
             document.getElementById('selected-package-price').textContent = price;
             document.getElementById('selected-package-game').textContent = game;
             document.getElementById('order-modal').classList.remove('hidden');
+            
+            auth.trackActivity('order_modal_open', `Order modal opened for ${packageName}`);
         }
 
         function closeOrderModal() {
@@ -1023,7 +1161,12 @@
                             <h4 class="text-white font-semibold">${order.packageName || 'Paket Joki'}</h4>
                             <p class="text-gray-400 text-sm">${order.game || 'Game'} • ${new Date(order.createdAt).toLocaleDateString('id-ID')}</p>
                         </div>
-                        <span class="order-status-${order.status} font-semibold">${getStatusText(order.status)}</span>
+                        <span class="px-3 py-1 rounded-full text-xs ${
+                            order.status === 'completed' ? 'bg-green-500 text-white' :
+                            order.status === 'processing' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
+                        }">
+                            ${getStatusText(order.status)}
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-accent font-bold">${order.price || 'Rp 0'}</span>
@@ -1044,6 +1187,7 @@
         }
 
         function logout() {
+            auth.trackActivity('logout', 'User logged out');
             auth.logout();
             closeProfileModal();
             closeMobileMenu();
@@ -1059,6 +1203,10 @@
             mobileMenu.classList.toggle('active');
             menuOverlay.classList.toggle('active');
             document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+            
+            if (mobileMenu.classList.contains('active')) {
+                auth.trackActivity('mobile_menu_open', 'Mobile menu opened');
+            }
         }
 
         function closeMobileMenu() {
@@ -1154,13 +1302,16 @@
                 // Close modal and reset form
                 closeOrderModal();
                 document.getElementById('order-form').reset();
+                
+                // Update live stats
+                auth.updateLiveStats();
             }
         });
 
         // WhatsApp integration
         function sendOrderToWhatsApp(orderData) {
             const user = auth.getCurrentUser();
-            const message = `Halo DIURNAL! Saya ingin order joki:\n\n` +
+            const message = `Halo DIURNAL! Saya ingin order joki Genshin Impact:\n\n` +
                            `📦 *PAKET:* ${orderData.packageName}\n` +
                            `💰 *HARGA:* ${orderData.price}\n` +
                            `🎮 *GAME:* ${orderData.game}\n` +
@@ -1214,6 +1365,28 @@
 
         document.getElementById('order-modal').addEventListener('click', function(e) {
             if (e.target === this) closeOrderModal();
+        });
+
+        // Track page interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track package views
+            const packageButtons = document.querySelectorAll('button[onclick*="orderPackage"]');
+            packageButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const packageName = this.closest('.package-card').querySelector('h3').textContent;
+                    auth.trackActivity('package_view', `Viewed package: ${packageName}`);
+                });
+            });
+
+            // Track CTA clicks
+            const ctaButtons = document.querySelectorAll('.btn-primary');
+            ctaButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.textContent.includes('Order Sekarang')) {
+                        auth.trackActivity('cta_click', 'Clicked Order Sekarang button');
+                    }
+                });
+            });
         });
 
         // Simple animation on scroll
